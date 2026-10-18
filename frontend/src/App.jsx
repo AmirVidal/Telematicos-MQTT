@@ -1,29 +1,26 @@
 import { useMqtt } from './hooks/useMqtt'
-import { useState } from "react";
-import UserIdentification from "./components/UserIdentification";
-import {
-  getUserSession,
-  clearUserSession,
-} from "./services/userSession";
+import { useState } from 'react'
+import UserIdentification from './components/UserIdentification'
+import { getUserSession, clearUserSession } from './services/userSession'
 import './App.css'
 
 const estados = {
   connecting: {
     titulo: 'Conectando',
-    descripcion: 'Estableciendo conexión con el broker MQTT.',
+    descripcion: 'Estableciendo conexión con el broker MQTT.'
   },
   connected: {
     titulo: 'Conectado',
-    descripcion: 'La conexión con el broker MQTT está activa.',
+    descripcion: 'La conexión con el broker MQTT está activa.'
   },
   reconnecting: {
     titulo: 'Reconectando',
-    descripcion: 'Intentando restablecer la conexión automáticamente.',
+    descripcion: 'Intentando restablecer la conexión automáticamente.'
   },
   disconnected: {
     titulo: 'Desconectado',
-    descripcion: 'La conexión se interrumpió. Se intentará recuperar.',
-  },
+    descripcion: 'La conexión se interrumpió. Se intentará recuperar.'
+  }
 }
 
 function MqttDashboard({ user, onLogout }) {
@@ -34,7 +31,9 @@ function MqttDashboard({ user, onLogout }) {
     <main className="pagina">
       <div className="contenedor">
         <header className="cabecera">
-          <div className="logo" aria-hidden="true">MQ</div>
+          <div className="logo" aria-hidden="true">
+            MQ
+          </div>
           <div>
             <p className="subtitulo-superior">Servicios Telemáticos</p>
             <h1>Sistema de mensajería MQTT</h1>
@@ -45,17 +44,11 @@ function MqttDashboard({ user, onLogout }) {
         <section className="tarjeta perfil-usuario">
           <div className="tarjeta-cabecera">
             <div>
-              <p className="seccion-etiqueta">
-                HU04 · Identificación
-              </p>
+              <p className="seccion-etiqueta">HU04 · Identificación</p>
               <h2>Personal identificado</h2>
             </div>
 
-            <button
-              type="button"
-              className="boton-salir"
-              onClick={onLogout}
-            >
+            <button type="button" className="boton-salir" onClick={onLogout}>
               Cerrar sesión
             </button>
           </div>
@@ -78,7 +71,6 @@ function MqttDashboard({ user, onLogout }) {
           </dl>
         </section>
 
-
         <section className="tarjeta" aria-labelledby="titulo-conexion">
           <div className="tarjeta-cabecera">
             <div>
@@ -88,11 +80,7 @@ function MqttDashboard({ user, onLogout }) {
             <span className="etiqueta-protocolo">WebSocket</span>
           </div>
 
-          <div
-            className={`estado estado--${status}`}
-            role="status"
-            aria-live="polite"
-          >
+          <div className={`estado estado--${status}`} role="status" aria-live="polite">
             <span className="estado-indicador" aria-hidden="true" />
             <div>
               <strong>{estado.titulo}</strong>
@@ -131,31 +119,23 @@ function MqttDashboard({ user, onLogout }) {
   )
 }
 
-
 function App() {
-  const [user, setUser] = useState(getUserSession);
+  const [user, setUser] = useState(getUserSession)
 
   function handleIdentify(identifiedUser) {
-    setUser(identifiedUser);
+    setUser(identifiedUser)
   }
 
   function handleLogout() {
-    clearUserSession();
-    setUser(null);
+    clearUserSession()
+    setUser(null)
   }
 
   if (!user) {
-    return (
-      <UserIdentification onIdentify={handleIdentify} />
-    );
+    return <UserIdentification onIdentify={handleIdentify} />
   }
 
-  return (
-    <MqttDashboard
-      user={user}
-      onLogout={handleLogout}
-    />
-  );
+  return <MqttDashboard user={user} onLogout={handleLogout} />
 }
 
 export default App

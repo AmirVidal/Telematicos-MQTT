@@ -17,8 +17,8 @@ export function validateUser(name, role) {
 
   const normalizedName = name.trim().replace(/\s+/g, ' ')
 
-  if (normalizedName.length < 3 || normalizedName.length > 60) {
-    throw new Error('El nombre debe tener entre 3 y 60 caracteres.')
+  if (normalizedName.length < 3 || normalizedName.length > 50) {
+    throw new Error('El nombre debe tener entre 3 y 50 caracteres.')
   }
 
   if (!/^[\p{L}\p{M}]+(?:[ .'-][\p{L}\p{M}]+)*$/u.test(normalizedName)) {

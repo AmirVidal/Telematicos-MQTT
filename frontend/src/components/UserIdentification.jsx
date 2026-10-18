@@ -1,39 +1,35 @@
-
-import { useState } from "react";
-import {
-  USER_ROLES,
-  createUserSession,
-} from "../services/userSession";
+import { useState } from 'react'
+import { USER_ROLES, createUserSession } from '../services/userSession'
 
 const ROLE_OPTIONS = [
-  { value: USER_ROLES.SEGURIDAD, label: "Seguridad" },
-  { value: USER_ROLES.MANTENIMIENTO, label: "Mantenimiento" },
-  { value: USER_ROLES.RECEPCION, label: "Recepción" },
-  { value: USER_ROLES.LIMPIEZA, label: "Limpieza" },
-  { value: USER_ROLES.ADMINISTRACION, label: "Administración" },
-];
+  { value: USER_ROLES.SEGURIDAD, label: 'Seguridad' },
+  { value: USER_ROLES.MANTENIMIENTO, label: 'Mantenimiento' },
+  { value: USER_ROLES.RECEPCION, label: 'Recepción' },
+  { value: USER_ROLES.LIMPIEZA, label: 'Limpieza' },
+  { value: USER_ROLES.ADMINISTRACION, label: 'Administración' }
+]
 
 export default function UserIdentification({ onIdentify }) {
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [name, setName] = useState('')
+  const [role, setRole] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   function handleSubmit(event) {
-    event.preventDefault();
+    event.preventDefault()
 
-    if (submitting) return;
+    if (submitting) return
 
-    setError("");
-    setSubmitting(true);
+    setError('')
+    setSubmitting(true)
 
     try {
-      const user = createUserSession(name, role);
-      onIdentify(user);
+      const user = createUserSession(name, role)
+      onIdentify(user)
     } catch (err) {
-      setError(err.message || "No se pudo registrar la identificación.");
+      setError(err.message || 'No se pudo registrar la identificación.')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
@@ -54,11 +50,11 @@ export default function UserIdentification({ onIdentify }) {
               type="text"
               value={name}
               onChange={(event) => {
-                setName(event.target.value);
-                setError("");
+                setName(event.target.value)
+                setError('')
               }}
               placeholder="Ingrese su nombre completo"
-              maxLength={60}
+              maxLength={50}
               autoComplete="name"
               required
             />
@@ -71,8 +67,8 @@ export default function UserIdentification({ onIdentify }) {
               id="user-role"
               value={role}
               onChange={(event) => {
-                setRole(event.target.value);
-                setError("");
+                setRole(event.target.value)
+                setError('')
               }}
               required
             >
@@ -92,19 +88,13 @@ export default function UserIdentification({ onIdentify }) {
             </p>
           )}
 
-          <button
-            type="submit"
-            className="identification-button"
-            disabled={submitting}
-          >
-            {submitting ? "Ingresando..." : "Ingresar al sistema"}
+          <button type="submit" className="identification-button" disabled={submitting}>
+            {submitting ? 'Ingresando...' : 'Ingresar al sistema'}
           </button>
         </form>
 
-        <p className="identification-footer">
-          Plataforma de comunicación del personal operativo
-        </p>
+        <p className="identification-footer">Plataforma de comunicación del personal operativo</p>
       </section>
     </main>
-  );
+  )
 }

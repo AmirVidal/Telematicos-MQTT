@@ -201,7 +201,6 @@
   text-align: center;
 }
 
-
 /* HU04 - Identificación de usuarios */
 
 .identification-page {
@@ -345,7 +344,6 @@
     flex-direction: column;
   }
 }
-
 
 @media (max-width: 600px) {
   .pagina {
