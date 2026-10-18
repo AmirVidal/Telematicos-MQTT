@@ -1,121 +1,90 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useMqtt } from './hooks/useMqtt'
 import './App.css'
 
+const estados = {
+  connecting: {
+    titulo: 'Conectando',
+    descripcion: 'Estableciendo conexión con el broker MQTT.',
+  },
+  connected: {
+    titulo: 'Conectado',
+    descripcion: 'La conexión con el broker MQTT está activa.',
+  },
+  reconnecting: {
+    titulo: 'Reconectando',
+    descripcion: 'Intentando restablecer la conexión automáticamente.',
+  },
+  disconnected: {
+    titulo: 'Desconectado',
+    descripcion: 'La conexión se interrumpió. Se intentará recuperar.',
+  },
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const { url, clientId, status, error } = useMqtt()
+  const estado = estados[status] ?? estados.disconnected
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <main className="pagina">
+      <div className="contenedor">
+        <header className="cabecera">
+          <div className="logo" aria-hidden="true">MQ</div>
+          <div>
+            <p className="subtitulo-superior">Servicios Telemáticos</p>
+            <h1>Sistema de mensajería MQTT</h1>
+            <p className="subtitulo">Conexión de clientes al broker</p>
+          </div>
+        </header>
 
-      <div className="ticks"></div>
+        <section className="tarjeta" aria-labelledby="titulo-conexion">
+          <div className="tarjeta-cabecera">
+            <div>
+              <p className="seccion-etiqueta">Conexión en tiempo real</p>
+              <h2 id="titulo-conexion">Estado del broker MQTT</h2>
+            </div>
+            <span className="etiqueta-protocolo">WebSocket</span>
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div
+            className={`estado estado--${status}`}
+            role="status"
+            aria-live="polite"
+          >
+            <span className="estado-indicador" aria-hidden="true" />
+            <div>
+              <strong>{estado.titulo}</strong>
+              <p>{estado.descripcion}</p>
+            </div>
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <dl className="datos-conexion">
+            <div>
+              <dt>Dirección del broker</dt>
+              <dd>{url}</dd>
+            </div>
+            <div>
+              <dt>Identificador del cliente</dt>
+              <dd>{clientId}</dd>
+            </div>
+            <div>
+              <dt>Protocolo de comunicación</dt>
+              <dd>MQTT sobre WebSocket</dd>
+            </div>
+          </dl>
+
+          {error && status !== 'connected' && (
+            <p className="error-conexion" role="alert">
+              No se pudo establecer la conexión: {error}
+            </p>
+          )}
+        </section>
+
+        <p className="nota">
+          La aplicación administra la conexión y la reconexión de forma automática.
+        </p>
+        <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
+      </div>
+    </main>
   )
 }
 
