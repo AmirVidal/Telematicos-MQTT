@@ -1,4 +1,10 @@
 import { useMqtt } from './hooks/useMqtt'
+import { useState } from "react";
+import UserIdentification from "./components/UserIdentification";
+import {
+  getUserSession,
+  clearUserSession,
+} from "./services/userSession";
 import './App.css'
 
 const estados = {
@@ -20,7 +26,7 @@ const estados = {
   },
 }
 
-function App() {
+function MqttDashboard({ user, onLogout }) {
   const { url, clientId, status, error } = useMqtt()
   const estado = estados[status] ?? estados.disconnected
 
@@ -35,6 +41,43 @@ function App() {
             <p className="subtitulo">Conexión de clientes al broker</p>
           </div>
         </header>
+
+        <section className="tarjeta perfil-usuario">
+          <div className="tarjeta-cabecera">
+            <div>
+              <p className="seccion-etiqueta">
+                HU04 · Identificación
+              </p>
+              <h2>Personal identificado</h2>
+            </div>
+
+            <button
+              type="button"
+              className="boton-salir"
+              onClick={onLogout}
+            >
+              Cerrar sesión
+            </button>
+          </div>
+
+          <dl className="datos-conexion">
+            <div>
+              <dt>Nombre</dt>
+              <dd>{user.name}</dd>
+            </div>
+
+            <div>
+              <dt>Tipo de personal</dt>
+              <dd>{user.role}</dd>
+            </div>
+
+            <div>
+              <dt>Identificador de sesión</dt>
+              <dd>{user.id}</dd>
+            </div>
+          </dl>
+        </section>
+
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">
           <div className="tarjeta-cabecera">
@@ -86,6 +129,33 @@ function App() {
       </div>
     </main>
   )
+}
+
+
+function App() {
+  const [user, setUser] = useState(getUserSession);
+
+  function handleIdentify(identifiedUser) {
+    setUser(identifiedUser);
+  }
+
+  function handleLogout() {
+    clearUserSession();
+    setUser(null);
+  }
+
+  if (!user) {
+    return (
+      <UserIdentification onIdentify={handleIdentify} />
+    );
+  }
+
+  return (
+    <MqttDashboard
+      user={user}
+      onLogout={handleLogout}
+    />
+  );
 }
 
 export default App

@@ -201,6 +201,152 @@
   text-align: center;
 }
 
+
+/* HU04 - Identificación de usuarios */
+
+.identification-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.identification-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px;
+  background: white;
+  border: 1px solid #e0e6ee;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgb(17 44 77 / 8%);
+}
+
+.identification-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.identification-header h1 {
+  margin: 0 0 10px;
+  color: #12253d;
+  font-size: 25px;
+}
+
+.identification-header p {
+  margin: 0;
+  color: #61748a;
+  font-size: 14px;
+}
+
+.identification-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #203c58;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d5dfe9;
+  border-radius: 9px;
+  background: white;
+  color: #203c58;
+  font: inherit;
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: 2px solid #17467d;
+  outline-offset: 1px;
+}
+
+.identification-button {
+  padding: 13px 20px;
+  border: none;
+  border-radius: 9px;
+  background: #17467d;
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.identification-button:hover {
+  background: #10365f;
+}
+
+.identification-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.identification-error {
+  margin: 0;
+  color: #a12c2c;
+  font-size: 13px;
+}
+
+.identification-footer {
+  margin: 24px 0 0;
+  text-align: center;
+  color: #8390a2;
+  font-size: 12px;
+}
+
+.perfil-usuario {
+  margin-bottom: 20px;
+}
+
+.perfil-usuario h2 {
+  margin: 0;
+  color: #12253d;
+  font-size: 20px;
+}
+
+.boton-salir {
+  padding: 9px 14px;
+  border: 1px solid #f1c8c8;
+  border-radius: 9px;
+  background: #fff2f2;
+  color: #a12c2c;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-salir:hover {
+  background: #ffe3e3;
+}
+
+@media (max-width: 600px) {
+  .identification-card {
+    padding: 24px;
+  }
+
+  .perfil-usuario .tarjeta-cabecera {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
 @media (max-width: 600px) {
   .pagina {
     padding: 30px 14px;
