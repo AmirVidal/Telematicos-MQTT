@@ -29,7 +29,7 @@ export default function ConnectedUsers({
       <div className="tarjeta-cabecera">
         <div>
           <p className="seccion-etiqueta">
-            HU06 · Presencia en tiempo real
+            Presencia en tiempo real
           </p>
           <h2 id="titulo-usuarios">
             Personal conectado

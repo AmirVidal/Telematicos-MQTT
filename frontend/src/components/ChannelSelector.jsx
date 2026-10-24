@@ -19,7 +19,7 @@ export default function ChannelSelector({
       <div className="tarjeta-cabecera">
         <div>
           <p className="seccion-etiqueta">
-            HU05 · Selección de canal
+            Selección de canal
           </p>
           <h2 id="titulo-selector-canal">
             Canal de comunicación
