@@ -1,7 +1,9 @@
 import { useMqtt } from './hooks/useMqtt'
 import { useState } from 'react'
 import UserIdentification from './components/UserIdentification'
+import ChannelSelector from './components/ChannelSelector'
 import { getUserSession, clearUserSession } from './services/userSession'
+import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
 import './App.css'
 
 const estados = {
@@ -25,6 +27,12 @@ const estados = {
 
 function MqttDashboard({ user, onLogout }) {
   const { url, clientId, status, error } = useMqtt()
+  const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
+
+  function handleSelectChannel(channelId) {
+    saveSelectedChannelId(user.id, channelId)
+    setSelectedChannelId(channelId)
+  }
   const estado = estados[status] ?? estados.disconnected
 
   return (
@@ -37,7 +45,7 @@ function MqttDashboard({ user, onLogout }) {
           <div>
             <p className="subtitulo-superior">Servicios Telemáticos</p>
             <h1>Sistema de mensajería MQTT</h1>
-            <p className="subtitulo">Conexión de clientes al broker</p>
+            <p className="subtitulo">Comunicación del personal operativo del edificio</p>
           </div>
         </header>
 
@@ -70,6 +78,11 @@ function MqttDashboard({ user, onLogout }) {
             </div>
           </dl>
         </section>
+
+        <ChannelSelector
+          selectedChannelId={selectedChannelId}
+          onSelectChannel={handleSelectChannel}
+        />
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">
           <div className="tarjeta-cabecera">
@@ -128,6 +141,7 @@ function App() {
 
   function handleLogout() {
     clearUserSession()
+    clearSelectedChannelId()
     setUser(null)
   }
 

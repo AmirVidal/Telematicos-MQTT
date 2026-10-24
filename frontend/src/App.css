@@ -371,3 +371,70 @@
     gap: 5px;
   }
 }
+
+/* HU05 - Selección de canal */
+
+.selector-canal {
+  margin-bottom: 20px;
+}
+
+.selector-canal-etiqueta {
+  display: block;
+  margin: 22px 0 8px;
+  color: #203c58;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.selector-canal-lista {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d5dfe9;
+  border-radius: 9px;
+  background: white;
+  color: #203c58;
+  font: inherit;
+  font-size: 14px;
+}
+
+.selector-canal-lista:focus-visible {
+  outline: 2px solid #17467d;
+  outline-offset: 2px;
+}
+
+.selector-canal-seleccion {
+  margin-top: 17px;
+  padding: 17px;
+  border: 1px solid #b5e5c9;
+  border-radius: 12px;
+  background: #eefaf3;
+}
+
+.selector-canal-seleccion strong {
+  color: #1c6940;
+  font-size: 15px;
+}
+
+.selector-canal-seleccion p,
+.selector-canal-ayuda {
+  margin: 9px 0;
+  color: #61748a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.selector-canal-seleccion span {
+  display: block;
+  margin-top: 12px;
+  color: #42657a;
+  font-size: 12px;
+}
+
+.selector-canal-seleccion code {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  color: #203c58;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
