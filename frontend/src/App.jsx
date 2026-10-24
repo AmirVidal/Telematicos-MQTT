@@ -3,6 +3,8 @@ import { useState } from 'react'
 import UserIdentification from './components/UserIdentification'
 import ChannelSelector from './components/ChannelSelector'
 import ConnectedUsers from './components/ConnectedUsers'
+import MessageComposer from './components/MessageComposer'
+import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
 import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
 import './App.css'
@@ -27,8 +29,9 @@ const estados = {
 }
 
 function MqttDashboard({ user, onLogout }) {
-  const { url, clientId, status, error, connectedUsers } = useMqtt(user)
+  const { url, clientId, status, error, connectedUsers, sendMessage } = useMqtt(user)
   const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
+  const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
     saveSelectedChannelId(user.id, channelId)
@@ -83,6 +86,13 @@ function MqttDashboard({ user, onLogout }) {
         <ChannelSelector
           selectedChannelId={selectedChannelId}
           onSelectChannel={handleSelectChannel}
+        />
+
+        <MessageComposer
+          channelId={selectedChannelId}
+          channelName={selectedChannel?.name ?? 'Sin seleccionar'}
+          connected={status === 'connected'}
+          onSend={sendMessage}
         />
 
         <ConnectedUsers
