@@ -69,7 +69,7 @@ function MqttDashboard({ user, onLogout }) {
         <section className="tarjeta perfil-usuario">
           <div className="tarjeta-cabecera">
             <div>
-              <p className="seccion-etiqueta">HU04 · Identificación</p>
+              <p className="seccion-etiqueta">Identificación</p>
               <h2>Personal identificado</h2>
             </div>
 
