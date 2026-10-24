@@ -29,8 +29,21 @@ const estados = {
 }
 
 function MqttDashboard({ user, onLogout }) {
-  const { url, clientId, status, error, connectedUsers, sendMessage } = useMqtt(user)
-  const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
+  const [selectedChannelId, setSelectedChannelId] = useState(() =>
+    getSelectedChannelId(user.id)
+  )
+
+  const {
+    url,
+    clientId,
+    status,
+    error,
+    connectedUsers,
+    sendMessage,
+    receivedMessages,
+    subscribedChannelId
+  } = useMqtt(user, undefined, selectedChannelId)
+  
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
