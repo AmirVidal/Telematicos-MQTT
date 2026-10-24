@@ -438,3 +438,103 @@
   font-family: ui-monospace, Consolas, monospace;
   font-size: 13px;
 }
+
+.usuarios-conectados {
+  margin-bottom: 20px;
+}
+
+.contador-usuarios {
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #eefaf3;
+  color: #1c6940;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.usuarios-filtro-label {
+  display: block;
+  margin: 20px 0 8px;
+  color: #203c58;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.usuarios-filtro {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d5dfe9;
+  border-radius: 9px;
+  background: white;
+  color: #203c58;
+  font: inherit;
+  font-size: 14px;
+}
+
+.usuarios-filtro:focus-visible {
+  outline: 2px solid #17467d;
+  outline-offset: 2px;
+}
+
+.usuarios-lista {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 20px 0 0;
+  list-style: none;
+}
+
+.usuario-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e0e6ee;
+  border-radius: 12px;
+}
+
+.usuario-indicador {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: #27a666;
+}
+
+.usuario-datos {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+}
+
+.usuario-datos strong {
+  color: #12253d;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.usuario-datos span,
+.usuario-datos small {
+  color: #61748a;
+  font-size: 12px;
+}
+
+.usuario-enlinea {
+  color: #1c6940;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.usuarios-vacio {
+  margin: 20px 0 0;
+  color: #61748a;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .usuarios-conectados .tarjeta-cabecera {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -6,9 +6,11 @@ export const MQTT_URL =
 export function createClientId() {
   const bytes = new Uint8Array(8);
   crypto.getRandomValues(bytes);
+
   const suffix = Array.from(bytes, (byte) =>
     byte.toString(16).padStart(2, "0"),
   ).join("");
+
   return `web${suffix}`;
 }
 
@@ -18,6 +20,7 @@ export function createMqttConnection({
   onStatus = () => {},
   onError = () => {},
   connectFn = mqtt.connect,
+  will,
 } = {}) {
   let stopped = false;
 
@@ -30,8 +33,15 @@ export function createMqttConnection({
     onError(null);
     notifyStatus("connected");
   };
-  const handleReconnect = () => notifyStatus("reconnecting");
-  const handleClose = () => notifyStatus("disconnected");
+
+  const handleReconnect = () => {
+    notifyStatus("reconnecting");
+  };
+
+  const handleClose = () => {
+    notifyStatus("disconnected");
+  };
+
   const handleError = (error) => {
     if (!stopped) onError(error);
   };
@@ -44,6 +54,7 @@ export function createMqttConnection({
     keepalive: 30,
     connectTimeout: 5000,
     reconnectPeriod: 2000,
+    ...(will ? { will } : {}),
   });
 
   client.on("connect", handleConnect);
@@ -58,10 +69,12 @@ export function createMqttConnection({
     stop() {
       if (stopped) return;
       stopped = true;
+
       client.removeListener("connect", handleConnect);
       client.removeListener("reconnect", handleReconnect);
       client.removeListener("close", handleClose);
       client.removeListener("offline", handleClose);
+
       client.end(true);
     },
   };

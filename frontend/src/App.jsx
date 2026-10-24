@@ -2,6 +2,7 @@ import { useMqtt } from './hooks/useMqtt'
 import { useState } from 'react'
 import UserIdentification from './components/UserIdentification'
 import ChannelSelector from './components/ChannelSelector'
+import ConnectedUsers from './components/ConnectedUsers'
 import { getUserSession, clearUserSession } from './services/userSession'
 import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
 import './App.css'
@@ -26,7 +27,7 @@ const estados = {
 }
 
 function MqttDashboard({ user, onLogout }) {
-  const { url, clientId, status, error } = useMqtt()
+  const { url, clientId, status, error, connectedUsers } = useMqtt(user)
   const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
 
   function handleSelectChannel(channelId) {
@@ -82,6 +83,12 @@ function MqttDashboard({ user, onLogout }) {
         <ChannelSelector
           selectedChannelId={selectedChannelId}
           onSelectChannel={handleSelectChannel}
+        />
+
+        <ConnectedUsers
+          users={connectedUsers}
+          currentUserId={user.id}
+          connectionStatus={status}
         />
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">
