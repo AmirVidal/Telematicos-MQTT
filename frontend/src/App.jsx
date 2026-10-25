@@ -1,7 +1,12 @@
 import { useMqtt } from './hooks/useMqtt'
 import { useState } from 'react'
 import UserIdentification from './components/UserIdentification'
+import ChannelSelector from './components/ChannelSelector'
+import ConnectedUsers from './components/ConnectedUsers'
+import MessageComposer from './components/MessageComposer'
+import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
+import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
 import './App.css'
 
 const estados = {
@@ -24,7 +29,27 @@ const estados = {
 }
 
 function MqttDashboard({ user, onLogout }) {
-  const { url, clientId, status, error } = useMqtt()
+  const [selectedChannelId, setSelectedChannelId] = useState(() =>
+    getSelectedChannelId(user.id)
+  )
+
+  const {
+    url,
+    clientId,
+    status,
+    error,
+    connectedUsers,
+    sendMessage,
+    receivedMessages,
+    subscribedChannelId
+  } = useMqtt(user, undefined, selectedChannelId)
+  
+  const selectedChannel = getChannel(selectedChannelId)
+
+  function handleSelectChannel(channelId) {
+    saveSelectedChannelId(user.id, channelId)
+    setSelectedChannelId(channelId)
+  }
   const estado = estados[status] ?? estados.disconnected
 
   return (
@@ -37,14 +62,14 @@ function MqttDashboard({ user, onLogout }) {
           <div>
             <p className="subtitulo-superior">Servicios Telemáticos</p>
             <h1>Sistema de mensajería MQTT</h1>
-            <p className="subtitulo">Conexión de clientes al broker</p>
+            <p className="subtitulo">Comunicación del personal operativo del edificio</p>
           </div>
         </header>
 
         <section className="tarjeta perfil-usuario">
           <div className="tarjeta-cabecera">
             <div>
-              <p className="seccion-etiqueta">HU04 · Identificación</p>
+              <p className="seccion-etiqueta">Identificación</p>
               <h2>Personal identificado</h2>
             </div>
 
@@ -70,6 +95,24 @@ function MqttDashboard({ user, onLogout }) {
             </div>
           </dl>
         </section>
+
+        <ChannelSelector
+          selectedChannelId={selectedChannelId}
+          onSelectChannel={handleSelectChannel}
+        />
+
+        <MessageComposer
+          channelId={selectedChannelId}
+          channelName={selectedChannel?.name ?? 'Sin seleccionar'}
+          connected={status === 'connected'}
+          onSend={sendMessage}
+        />
+
+        <ConnectedUsers
+          users={connectedUsers}
+          currentUserId={user.id}
+          connectionStatus={status}
+        />
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">
           <div className="tarjeta-cabecera">
@@ -128,6 +171,7 @@ function App() {
 
   function handleLogout() {
     clearUserSession()
+    clearSelectedChannelId()
     setUser(null)
   }
 

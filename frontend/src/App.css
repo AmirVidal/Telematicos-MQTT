@@ -371,3 +371,265 @@
     gap: 5px;
   }
 }
+
+/* HU05 - Selección de canal */
+
+.selector-canal {
+  margin-bottom: 20px;
+}
+
+.selector-canal-etiqueta {
+  display: block;
+  margin: 22px 0 8px;
+  color: #203c58;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.selector-canal-lista {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d5dfe9;
+  border-radius: 9px;
+  background: white;
+  color: #203c58;
+  font: inherit;
+  font-size: 14px;
+}
+
+.selector-canal-lista:focus-visible {
+  outline: 2px solid #17467d;
+  outline-offset: 2px;
+}
+
+.selector-canal-seleccion {
+  margin-top: 17px;
+  padding: 17px;
+  border: 1px solid #b5e5c9;
+  border-radius: 12px;
+  background: #eefaf3;
+}
+
+.selector-canal-seleccion strong {
+  color: #1c6940;
+  font-size: 15px;
+}
+
+.selector-canal-seleccion p,
+.selector-canal-ayuda {
+  margin: 9px 0;
+  color: #61748a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.selector-canal-seleccion span {
+  display: block;
+  margin-top: 12px;
+  color: #42657a;
+  font-size: 12px;
+}
+
+.selector-canal-seleccion code {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  color: #203c58;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
+
+.usuarios-conectados {
+  margin-bottom: 20px;
+}
+
+.contador-usuarios {
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #eefaf3;
+  color: #1c6940;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.usuarios-filtro-label {
+  display: block;
+  margin: 20px 0 8px;
+  color: #203c58;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.usuarios-filtro {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d5dfe9;
+  border-radius: 9px;
+  background: white;
+  color: #203c58;
+  font: inherit;
+  font-size: 14px;
+}
+
+.usuarios-filtro:focus-visible {
+  outline: 2px solid #17467d;
+  outline-offset: 2px;
+}
+
+.usuarios-lista {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 20px 0 0;
+  list-style: none;
+}
+
+.usuario-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e0e6ee;
+  border-radius: 12px;
+}
+
+.usuario-indicador {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: #27a666;
+}
+
+.usuario-datos {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+}
+
+.usuario-datos strong {
+  color: #12253d;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.usuario-datos span,
+.usuario-datos small {
+  color: #61748a;
+  font-size: 12px;
+}
+
+.usuario-enlinea {
+  color: #1c6940;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.usuarios-vacio {
+  margin: 20px 0 0;
+  color: #61748a;
+  font-size: 14px;
+}
+
+
+/* HU07 - Envío de mensajes MQTT */
+
+.message-composer {
+  margin-top: 20px;
+}
+
+.message-composer-description {
+  color: #5c718b;
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+.message-composer form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-composer label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #17395e;
+}
+
+.message-composer textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #d1ddeb;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 14px;
+  color: #17395e;
+  background: #fff;
+  resize: vertical;
+  min-height: 110px;
+}
+
+.message-composer textarea:focus {
+  outline: 2px solid #1b487f;
+  outline-offset: 1px;
+}
+
+.message-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.message-character-count {
+  font-size: 12px;
+  color: #687d94;
+}
+
+.message-send-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 12px 20px;
+  background: #1b487f;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.message-send-button:hover:not(:disabled) {
+  background: #123760;
+}
+
+.message-send-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.message-feedback {
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.message-feedback--success {
+  color: #147345;
+}
+
+.message-feedback--error {
+  color: #b42323;
+}
+
+@media (max-width: 600px) {
+  .message-composer-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 600px) {
+  .usuarios-conectados .tarjeta-cabecera {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
