@@ -4,6 +4,7 @@ import UserIdentification from './components/UserIdentification'
 import ChannelSelector from './components/ChannelSelector'
 import ConnectedUsers from './components/ConnectedUsers'
 import MessageComposer from './components/MessageComposer'
+import ReceivedMessages from './components/ReceivedMessages'
 import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
 import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
@@ -112,6 +113,12 @@ function MqttDashboard({ user, onLogout }) {
           users={connectedUsers}
           currentUserId={user.id}
           connectionStatus={status}
+        />
+
+        <ReceivedMessages
+          messages={receivedMessages}
+          currentUserId={user.id}
+          channelName={selectedChannel?.name ?? null}
         />
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">

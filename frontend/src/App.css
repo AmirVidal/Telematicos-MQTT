@@ -194,6 +194,90 @@
   text-align: center;
 }
 
+.mensajes-recibidos {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.etiqueta-canal {
+  padding: 7px 12px;
+  border: 1px solid #d8e2f2;
+  border-radius: 20px;
+  background: #f6f9ff;
+  color: #264a7c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mensajes-vacios {
+  margin: 0;
+  color: #61748a;
+  font-size: 14px;
+}
+
+.lista-mensajes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  align-items: stretch;
+}
+
+.mensaje-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #e6ebf3;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  width: min(100%, 520px);
+  align-self: flex-start;
+}
+
+.mensaje-item--propio {
+  align-self: flex-end;
+  border-color: #c9e2ff;
+  background: linear-gradient(180deg, #f7fbff 0%, #eef6ff 100%);
+  margin-left: auto;
+}
+
+.mensaje-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mensaje-autor {
+  color: #1f3b5c;
+  font-weight: 700;
+}
+
+.mensaje-rol {
+  color: #61748a;
+  font-size: 14px;
+}
+
+.mensaje-fecha {
+  color: #7a8aa3;
+  font-size: 13px;
+  text-align: right;
+}
+
+.mensaje-contenido {
+  margin: 0;
+  color: #22324d;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .pie {
   padding-top: 30px;
   color: #8390a2;
