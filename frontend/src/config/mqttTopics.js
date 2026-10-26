@@ -37,6 +37,12 @@ export const topics = {
     tipo: (edificioId, tipo) =>
       `${edificio(edificioId)}/alertas/${tipo}`,
   },
+  
+  incidentes: {
+   base: (edificioId) => `${edificio(edificioId)}/incidentes`,
+   reportes: (edificioId) => `${edificio(edificioId)}/incidentes/reportes`,
+  },
+
   comandos: {
     base: (edificioId) => `${edificio(edificioId)}/comandos`,
     zona: (edificioId, zona) =>

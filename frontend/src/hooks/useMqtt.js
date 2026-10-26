@@ -6,6 +6,7 @@ import { parseReceivedMessage } from '../services/messageReceiver'
 import { getChannelTopic } from '../config/channelOptions'
 import { topics } from '../config/mqttTopics'
 import { USER_ROLES } from '../services/userSession'
+import { parseIncident } from '../services/incidentReceiver'
 
 const BUILDING_ID = import.meta.env.VITE_BUILDING_ID ?? 'edificio-1'
 
@@ -252,6 +253,74 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       client.removeListener('message', handleSupportMessage)
     }
   }, [status, userRole])
+  
+  
+  useEffect(() => {
+    const client = clientRef.current
+
+    if (!client || status !== 'connected') return
+
+    const canReceiveIncidents =
+      userRole === USER_ROLES.SEGURIDAD ||
+      userRole === USER_ROLES.ADMINISTRACION
+
+    if (!canReceiveIncidents) return
+
+    const topic = topics.incidentes.reportes(BUILDING_ID)
+    let active = true
+
+    function handleIncidentMessage(receivedTopic, payload) {
+      if (!active || receivedTopic !== topic) return
+
+      try {
+        const incident = parseIncident(payload)
+
+        setIncidentReports((previous) => {
+          const exists = previous.some(
+            (item) => item.id === incident.id
+          )
+
+          if (exists) return previous
+
+          return [incident, ...previous].slice(0, 100)
+        })
+      } catch (incidentError) {
+        console.warn(
+          'HU11: reporte descartado:',
+          incidentError.message
+        )
+      }
+    }
+
+    function subscribeAsync() {
+      return new Promise((resolve) => {
+        if (!active || !client.connected) {
+          resolve()
+          return
+        }
+
+        client.subscribe(topic, { qos: 1 }, (subscribeError) => {
+          if (subscribeError && active) {
+            setError(subscribeError.message)
+          }
+
+          resolve()
+        })
+      })
+    }
+
+    client.on('message', handleIncidentMessage)
+
+    subscriptionQueueRef.current =
+      subscriptionQueueRef.current
+        .catch(() => {})
+        .then(subscribeAsync)
+
+    return () => {
+      active = false
+      client.removeListener('message', handleIncidentMessage)
+    }
+  }, [status, userRole])
 
   const sendMessage = useCallback(
     async (channelId, content) => {
@@ -288,6 +357,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     sendMessage,
     receivedMessages,
     supportRequests,
+    cidentReports,
     subscribedChannelId:
       status === 'connected' && subscribedChannelId === selectedChannelId
         ? subscribedChannelId

@@ -6,12 +6,16 @@ import ConnectedUsers from './components/ConnectedUsers'
 import MessageComposer from './components/MessageComposer'
 import ReceivedMessages from './components/ReceivedMessages'
 import SupportRequestForm from './components/SupportRequestForm'
+import IncidentReportForm from './components/IncidentReportForm'
+import { useIncidentReport } from './hooks/useIncidentReport'
 import SupportRequestsList from './components/SupportRequestsList'
 import { useSupportRequest } from './hooks/useSupportRequest'
 import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
 import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
 import './App.css'
+
+
 
 const estados = {
   connecting: {
@@ -51,7 +55,7 @@ function MqttDashboard({ user, onLogout }) {
   } = useMqtt(user, undefined, selectedChannelId)
 
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
-
+  const { sendIncident } = useIncidentReport(clientRef, user)
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
@@ -127,6 +131,11 @@ function MqttDashboard({ user, onLogout }) {
           currentUserId={user.id}
           channelName={selectedChannel?.name ?? null}
         />
+        
+         <IncidentReportForm
+           connected={status === 'connected'}
+           onSend={sendIncident}
+          />
 
         <SupportRequestForm
           connected={status === 'connected'}
