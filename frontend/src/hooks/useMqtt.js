@@ -200,6 +200,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     subscribedChannelId:
       status === 'connected' && subscribedChannelId === selectedChannelId
         ? subscribedChannelId
-        : null
+        : null,
+    clientRef
   }
 }
