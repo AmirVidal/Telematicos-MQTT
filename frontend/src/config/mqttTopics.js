@@ -43,6 +43,8 @@ export const topics = {
       `${edificio(edificioId)}/comandos/${zona}`,
     broadcast: (edificioId) =>
       `${edificio(edificioId)}/comandos/broadcast`,
+    soporte: (edificioId) =>
+      `${edificio(edificioId)}/comandos/soporte`,
   },
   telemetria: {
     base: (edificioId) => `${edificio(edificioId)}/telemetria`,

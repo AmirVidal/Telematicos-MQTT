@@ -4,6 +4,10 @@ import { createPresenceClient, createPresenceWill } from '../services/presenceCl
 import { publishMessage } from '../services/messagePublisher'
 import { parseReceivedMessage } from '../services/messageReceiver'
 import { getChannelTopic } from '../config/channelOptions'
+import { topics } from '../config/mqttTopics'
+import { USER_ROLES } from '../services/userSession'
+
+const BUILDING_ID = import.meta.env.VITE_BUILDING_ID ?? 'edificio-1'
 
 export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
   const [clientId] = useState(createClientId)
@@ -11,6 +15,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
   const [error, setError] = useState(null)
   const [connectedUsers, setConnectedUsers] = useState([])
   const [receivedMessages, setReceivedMessages] = useState([])
+  const [supportRequests, setSupportRequests] = useState([])
   const [subscribedChannelId, setSubscribedChannelId] = useState(null)
   const clientRef = useRef(null)
   const subscriptionQueueRef = useRef(Promise.resolve())
@@ -25,6 +30,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     const connection = createMqttConnection({
       url,
       clientId,
+      userRole,
       will: userId ? createPresenceWill(clientId) : undefined,
 
       onStatus: (nextStatus) => {
@@ -163,6 +169,90 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     }
   }, [status, selectedChannelId])
 
+  useEffect(() => {
+    const client = clientRef.current
+
+    if (!client || status !== 'connected') {
+      return
+    }
+
+    const canReceiveSupport =
+      userRole === USER_ROLES?.MANTENIMIENTO || userRole === USER_ROLES?.ADMINISTRACION
+
+    if (!canReceiveSupport) {
+      return
+    }
+
+    const supportTopic = topics.comandos.soporte(BUILDING_ID)
+    let active = true
+
+    function handleSupportMessage(receivedTopic, payload) {
+      if (!active || receivedTopic !== supportTopic) {
+        return
+      }
+
+      try {
+        const raw =
+          typeof payload === 'string' ? payload : new TextDecoder().decode(payload)
+        const parsed = JSON.parse(raw)
+
+        if (!parsed || typeof parsed !== 'object') {
+          return
+        }
+
+        if (parsed.type !== 'soporte' && !parsed.description) {
+          return
+        }
+
+        setSupportRequests((previous) => {
+          if (parsed.id && previous.some((item) => item.id === parsed.id)) {
+            return previous
+          }
+
+          const request = {
+            id: parsed.id || crypto.randomUUID(),
+            requesterId: parsed.requesterId || parsed.senderId || null,
+            requesterName: parsed.requesterName || parsed.senderName || 'Desconocido',
+            requesterRole: parsed.requesterRole || parsed.senderRole || '',
+            description: parsed.description || parsed.content || '',
+            timestamp: parsed.timestamp || new Date().toISOString(),
+            topic: receivedTopic
+          }
+
+          return [request, ...previous].slice(0, 100)
+        })
+      } catch (supportError) {
+        console.warn('HU10: solicitud de soporte descartada:', supportError.message)
+      }
+    }
+
+    function subscribeAsync() {
+      return new Promise((resolve) => {
+        if (!active || !client.connected) {
+          resolve()
+          return
+        }
+
+        client.subscribe(supportTopic, { qos: 1 }, (subscribeError) => {
+          if (subscribeError && active) {
+            setError(subscribeError.message)
+          }
+          resolve()
+        })
+      })
+    }
+
+    client.on('message', handleSupportMessage)
+    subscriptionQueueRef.current = subscriptionQueueRef.current
+      .catch(() => {})
+      .then(subscribeAsync)
+
+    return () => {
+      active = false
+      client.removeListener('message', handleSupportMessage)
+    }
+  }, [status, userRole])
+
   const sendMessage = useCallback(
     async (channelId, content) => {
       const client = clientRef.current
@@ -197,9 +287,11 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     connectedUsers,
     sendMessage,
     receivedMessages,
+    supportRequests,
     subscribedChannelId:
       status === 'connected' && subscribedChannelId === selectedChannelId
         ? subscribedChannelId
-        : null
+        : null,
+    clientRef
   }
 }

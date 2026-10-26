@@ -1,0 +1,5 @@
+# ACLs para Telematicos-MQTT
+
+# Permitir acceso completo a todos los usuarios autenticados
+pattern readwrite #
+pattern read $SYS/#

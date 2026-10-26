@@ -278,6 +278,158 @@
   word-break: break-word;
 }
 
+.soporte-solicitud {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.soporte-descripcion {
+  margin: 0;
+  color: #61748a;
+  font-size: 14px;
+}
+
+.soporte-solicitud form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.soporte-solicitud label {
+  color: #203c58;
+  font-weight: 600;
+}
+
+.soporte-solicitud textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  font: inherit;
+  resize: vertical;
+  min-height: 110px;
+  box-sizing: border-box;
+}
+
+.soporte-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.soporte-contador {
+  color: #7a8aa3;
+  font-size: 13px;
+}
+
+.soporte-boton {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2f7bd9 0%, #1f5fb5 100%);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.soporte-boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.soporte-feedback {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.soporte-feedback--success {
+  background: #eefaf3;
+  color: #1c6940;
+}
+
+.soporte-feedback--error {
+  background: #fff0f0;
+  color: #a12c2c;
+}
+
+.soporte-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.soporte-lista-vacia {
+  margin: 0;
+  color: #61748a;
+  font-size: 14px;
+}
+
+.lista-soporte {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  align-items: stretch;
+}
+
+.solicitud-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #e6ebf3;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  width: min(100%, 520px);
+  align-self: flex-start;
+}
+
+.solicitud-item--propio {
+  align-self: flex-end;
+  border-color: #c9e2ff;
+  background: linear-gradient(180deg, #f7fbff 0%, #eef6ff 100%);
+  margin-left: auto;
+}
+
+.solicitud-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.solicitud-autor {
+  color: #1f3b5c;
+  font-weight: 700;
+}
+
+.solicitud-rol {
+  color: #61748a;
+  font-size: 14px;
+}
+
+.solicitud-fecha {
+  color: #7a8aa3;
+  font-size: 13px;
+  text-align: right;
+}
+
+.solicitud-descripcion {
+  margin: 0;
+  color: #22324d;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .pie {
   padding-top: 30px;
   color: #8390a2;

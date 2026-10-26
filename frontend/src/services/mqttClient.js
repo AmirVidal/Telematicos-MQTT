@@ -1,7 +1,16 @@
 import mqtt from "mqtt";
+import { USER_ROLES } from "./userSession";
 
 export const MQTT_URL =
   import.meta.env?.VITE_MQTT_URL?.trim() || "ws://localhost:9001";
+
+const ROLE_CREDENTIALS = {
+  [USER_ROLES.MANTENIMIENTO]: { username: "mantenimiento", password: "pass123" },
+  [USER_ROLES.ADMINISTRACION]: { username: "administracion", password: "admin123" },
+  [USER_ROLES.RECEPCION]: { username: "recepcion", password: "recep123" },
+  [USER_ROLES.SEGURIDAD]: { username: "seguridad", password: "seg123" },
+  [USER_ROLES.LIMPIEZA]: { username: "limpieza", password: "limp123" },
+};
 
 export function createClientId() {
   const bytes = new Uint8Array(8);
@@ -21,6 +30,7 @@ export function createMqttConnection({
   onError = () => {},
   connectFn = mqtt.connect,
   will,
+  userRole,
 } = {}) {
   let stopped = false;
 
@@ -48,14 +58,23 @@ export function createMqttConnection({
 
   notifyStatus("connecting");
 
-  const client = connectFn(url, {
+  const credentials = userRole ? ROLE_CREDENTIALS[userRole] : ROLE_CREDENTIALS[USER_ROLES.RECEPCION];
+
+  const options = {
     clientId,
     clean: true,
     keepalive: 30,
     connectTimeout: 5000,
     reconnectPeriod: 2000,
     ...(will ? { will } : {}),
-  });
+  };
+
+  if (credentials?.username) {
+    options.username = credentials.username;
+    options.password = credentials.password;
+  }
+
+  const client = connectFn(url, options);
 
   client.on("connect", handleConnect);
   client.on("reconnect", handleReconnect);
