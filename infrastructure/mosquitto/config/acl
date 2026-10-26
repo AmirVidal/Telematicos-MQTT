@@ -1,13 +1,5 @@
 # ACLs para Telematicos-MQTT
 
-# Permitir a todos los usuarios autenticados acceso completo a los topics del edificio
-pattern readwrite edificio/#
+# Permitir acceso completo a todos los usuarios autenticados
+pattern readwrite #
 pattern read $SYS/#
-
-# Restricción: solo mantenimiento y administracion pueden leer solicitudes de soporte
-# (Los demás pueden publicar gracias al patrón anterior, pero la lectura se controla por el frontend)
-user mantenimiento
-topic readwrite edificio/+/comandos/soporte
-
-user administracion
-topic readwrite edificio/+/comandos/soporte
