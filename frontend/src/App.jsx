@@ -6,6 +6,7 @@ import ConnectedUsers from './components/ConnectedUsers'
 import MessageComposer from './components/MessageComposer'
 import ReceivedMessages from './components/ReceivedMessages'
 import SupportRequestForm from './components/SupportRequestForm'
+import SupportRequestsList from './components/SupportRequestsList'
 import { useSupportRequest } from './hooks/useSupportRequest'
 import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
@@ -44,6 +45,7 @@ function MqttDashboard({ user, onLogout }) {
     connectedUsers,
     sendMessage,
     receivedMessages,
+    supportRequests,
     subscribedChannelId,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
@@ -130,6 +132,8 @@ function MqttDashboard({ user, onLogout }) {
           connected={status === 'connected'}
           onSend={sendSupportRequest}
         />
+
+        <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">
           <div className="tarjeta-cabecera">
