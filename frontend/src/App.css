@@ -869,3 +869,32 @@
     flex-direction: column;
   }
 }
+
+
+/* HU11 - Formulario de reportes de incidentes */
+
+.incidente-formulario input,
+.incidente-formulario select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  background: #fff;
+  color: #203c58;
+  font: inherit;
+}
+
+.incidente-formulario input:focus,
+.incidente-formulario select:focus,
+.incidente-formulario textarea:focus {
+  outline: 2px solid #2f7bd9;
+  outline-offset: 1px;
+}
+
+@media (max-width: 600px) {
+  .incidente-formulario .soporte-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
