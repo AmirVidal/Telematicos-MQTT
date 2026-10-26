@@ -133,7 +133,9 @@ function MqttDashboard({ user, onLogout }) {
           onSend={sendSupportRequest}
         />
 
-        <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
+        {(user.role === 'mantenimiento' || user.role === 'administracion') && (
+          <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
+        )}
 
         <section className="tarjeta" aria-labelledby="titulo-conexion">
           <div className="tarjeta-cabecera">

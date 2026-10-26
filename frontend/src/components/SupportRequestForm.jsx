@@ -42,7 +42,7 @@ export default function SupportRequestForm({ connected, onSend }) {
     <section className="tarjeta soporte-solicitud">
       <div className="tarjeta-cabecera">
         <div>
-          <p className="seccion-etiqueta">HU10 · SOLICITUDES DE SOPORTE</p>
+          <p className="seccion-etiqueta">SOLICITUDES DE SOPORTE</p>
           <h2>Enviar solicitud de soporte</h2>
         </div>
         <span className="etiqueta-protocolo">QoS 1</span>

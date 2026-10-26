@@ -1,0 +1,12 @@
+# ACLs para Telematicos-MQTT
+
+# Usuarios con acceso a solicitudes de soporte (lectura)
+user mantenimiento
+topic read edificio/+/comandos/soporte
+
+user administracion
+topic read edificio/+/comandos/soporte
+
+# Cualquier usuario autenticado puede enviar (publicar) solicitudes de soporte
+pattern write edificio/%c/comandos/soporte
+pattern read $SYS/#

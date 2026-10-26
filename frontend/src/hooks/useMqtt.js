@@ -5,6 +5,7 @@ import { publishMessage } from '../services/messagePublisher'
 import { parseReceivedMessage } from '../services/messageReceiver'
 import { getChannelTopic } from '../config/channelOptions'
 import { topics } from '../config/mqttTopics'
+import { USER_ROLES } from '../services/userSession'
 
 const BUILDING_ID = import.meta.env.VITE_BUILDING_ID ?? 'edificio-1'
 
@@ -29,6 +30,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     const connection = createMqttConnection({
       url,
       clientId,
+      userRole,
       will: userId ? createPresenceWill(clientId) : undefined,
 
       onStatus: (nextStatus) => {
@@ -174,6 +176,13 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       return
     }
 
+    const canReceiveSupport =
+      userRole === USER_ROLES?.MANTENIMIENTO || userRole === USER_ROLES?.ADMINISTRACION
+
+    if (!canReceiveSupport) {
+      return
+    }
+
     const supportTopic = topics.comandos.soporte(BUILDING_ID)
     let active = true
 
@@ -242,7 +251,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       active = false
       client.removeListener('message', handleSupportMessage)
     }
-  }, [status])
+  }, [status, userRole])
 
   const sendMessage = useCallback(
     async (channelId, content) => {
