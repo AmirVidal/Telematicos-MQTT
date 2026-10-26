@@ -60,16 +60,21 @@ export function createMqttConnection({
 
   const credentials = userRole ? ROLE_CREDENTIALS[userRole] : ROLE_CREDENTIALS[USER_ROLES.RECEPCION];
 
-  const client = connectFn(url, {
+  const options = {
     clientId,
     clean: true,
     keepalive: 30,
     connectTimeout: 5000,
     reconnectPeriod: 2000,
-    username: credentials?.username,
-    password: credentials?.password,
     ...(will ? { will } : {}),
-  });
+  };
+
+  if (credentials?.username) {
+    options.username = credentials.username;
+    options.password = credentials.password;
+  }
+
+  const client = connectFn(url, options);
 
   client.on("connect", handleConnect);
   client.on("reconnect", handleReconnect);
