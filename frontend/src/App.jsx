@@ -50,7 +50,6 @@ function MqttDashboard({ user, onLogout }) {
     sendMessage,
     receivedMessages,
     supportRequests,
-    subscribedChannelId,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
 

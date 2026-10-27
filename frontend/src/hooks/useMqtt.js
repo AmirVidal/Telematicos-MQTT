@@ -17,6 +17,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
   const [connectedUsers, setConnectedUsers] = useState([])
   const [receivedMessages, setReceivedMessages] = useState([])
   const [supportRequests, setSupportRequests] = useState([])
+  const [incidentReports, setIncidentReports] = useState([])
   const [subscribedChannelId, setSubscribedChannelId] = useState(null)
   const clientRef = useRef(null)
   const subscriptionQueueRef = useRef(Promise.resolve())
@@ -357,7 +358,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     sendMessage,
     receivedMessages,
     supportRequests,
-    cidentReports,
+    incidentReports,
     subscribedChannelId:
       status === 'connected' && subscribedChannelId === selectedChannelId
         ? subscribedChannelId
