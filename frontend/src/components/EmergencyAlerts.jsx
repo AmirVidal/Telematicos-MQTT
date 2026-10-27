@@ -194,67 +194,58 @@ export default function EmergencyAlerts({
 
       {/* Historial de la sesión */}
 
-      <h3 className="emergencias-historial-titulo">
-        Historial recibido en esta sesión
-      </h3>
+      <details className="emergencias-historial">
+        <summary className="emergencias-historial-resumen">
+          <span>
+            Historial de alertas ({alerts.length})
+          </span>
 
-      {alerts.length === 0 ? (
+          <span className="emergencias-historial-indicador">
+            Ver historial
+          </span>
+        </summary>
 
-        <p className="emergencia-sin-alertas">
-          No se han recibido alertas en esta sesión.
-        </p>
+        <div className="emergencias-historial-contenido">
+          {alerts.length === 0 ? (
+            <p className="emergencia-sin-alertas">
+              No se han recibido alertas en esta sesión.
+            </p>
+          ) : (
+            <ul className="emergencias-lista">
+              {alerts.map((alert) => (
+                <li
+                  className="emergencia-recibida"
+                  key={alert.id}
+                >
+                  <div className="emergencia-recibida-cabecera">
+                    <strong>
+                      {alert.resolved ? 'RESUELTA' : 'ALERTA'}
+                      {' · '}
+                      {getEmergencyTypeLabel(alert.emergencyType)}
+                    </strong>
 
-      ) : (
+                    <time dateTime={alert.timestamp}>
+                      {displayDate(alert.timestamp)}
+                    </time>
+                  </div>
 
-        <ul
-          className="emergencias-lista"
-          aria-live="assertive"
-          aria-relevant="additions"
-        >
+                  <p>
+                    <strong>Ubicación:</strong> {alert.location}
+                  </p>
 
-          {alerts.map((alert) => (
+                  <p>{alert.description}</p>
 
-            <li
-              className="emergencia-recibida"
-              key={alert.id}
-            >
-
-              <div className="emergencia-recibida-cabecera">
-
-                <strong>
-                  {alert.resolved ? 'RESUELTA' : 'ALERTA'}
-                  {' · '}
-                  {getEmergencyTypeLabel(alert.emergencyType)}
-                </strong>
-
-                <time dateTime={alert.timestamp}>
-                  {displayDate(alert.timestamp)}
-                </time>
-
-              </div>
-
-              <p>
-                <strong>Ubicación:</strong> {alert.location}
-              </p>
-
-              <p>
-                {alert.description}
-              </p>
-
-              <p className="emergencia-emisor">
-                Emitida por {alert.senderName}
-                {' '}({alert.senderRole})
-                {' '}· ID: {alert.id}
-              </p>
-
-            </li>
-
-          ))}
-
-        </ul>
-
-      )}
-
+                  <p className="emergencia-emisor">
+                    Emitida por {alert.senderName}
+                    {' '}({alert.senderRole})
+                    {' '}· ID: {alert.id}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </details>
     </section>
   )
 }
