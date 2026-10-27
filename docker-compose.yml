@@ -10,6 +10,6 @@ services:
       - "127.0.0.1:9001:9001"
 
     volumes:
-      - ./infrastructure/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./infrastructure/mosquitto/config:/mosquitto/config:ro
       - ./infrastructure/mosquitto/data:/mosquitto/data
       - ./infrastructure/mosquitto/log:/mosquitto/log
