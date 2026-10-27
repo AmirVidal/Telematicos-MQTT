@@ -13,6 +13,8 @@ pattern read $SYS/#
 # Lectura de alertas para todos los usuarios
 
 pattern read edificio/+/alertas/#
+# Confirmacion de lectura por cliente MQTT
+pattern write edificio/+/alertas/emergencias/acuses/+/%c
 
 # Alertas ordinarias
 

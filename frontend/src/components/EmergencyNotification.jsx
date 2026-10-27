@@ -1,18 +1,51 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getEmergencyTypeLabel } from '../config/emergencyOptions'
 
 export default function EmergencyNotification({
   alert,
-  onDismiss
+  onDismiss,
+  onConfirm,
+  connected = false,
+  confirmed = false
 }) {
   const buttonRef = useRef(null)
+  const [confirming, setConfirming] = useState(false)
+  const [confirmationError, setConfirmationError] = useState('')
+
   const alertId = alert?.id
 
   useEffect(() => {
     if (alertId) {
       buttonRef.current?.focus()
     }
+
+    setConfirmationError('')
   }, [alertId])
+
+  async function handleConfirm() {
+    if (
+      !alertId ||
+      !onConfirm ||
+      !connected ||
+      confirming ||
+      confirmed
+    ) {
+      return
+    }
+
+    setConfirming(true)
+    setConfirmationError('')
+
+    try {
+      await onConfirm(alertId)
+    } catch (error) {
+      setConfirmationError(
+        error.message || 'No se pudo confirmar la lectura.'
+      )
+    } finally {
+      setConfirming(false)
+    }
+  }
 
   if (!alert) return null
 
@@ -24,7 +57,6 @@ export default function EmergencyNotification({
 
   return (
     <div className="emergency-overlay">
-
       <div
         className="emergency-modal"
         role="alertdialog"
@@ -32,9 +64,7 @@ export default function EmergencyNotification({
         aria-labelledby="emergency-modal-title"
         aria-describedby="emergency-modal-description"
       >
-
         <div className="emergency-modal-header">
-
           <span className="emergency-modal-icon">
             ⚠
           </span>
@@ -48,11 +78,9 @@ export default function EmergencyNotification({
               ¡Mensaje de emergencia!
             </h2>
           </div>
-
         </div>
 
         <div className="emergency-modal-body">
-
           <div className="emergency-modal-detail">
             <strong>Tipo de emergencia</strong>
 
@@ -63,7 +91,6 @@ export default function EmergencyNotification({
 
           <div className="emergency-modal-detail">
             <strong>Ubicación</strong>
-
             <span>{alert.location}</span>
           </div>
 
@@ -76,44 +103,64 @@ export default function EmergencyNotification({
           </div>
 
           <div className="emergency-modal-info">
-
             <p>
-              <strong>Emitido por:</strong>
-              {' '}{alert.senderName}
+              <strong>Emitido por:</strong>{' '}
+              {alert.senderName}
             </p>
 
             <p>
-              <strong>Área:</strong>
-              {' '}{alert.senderRole}
+              <strong>Área:</strong>{' '}
+              {alert.senderRole}
             </p>
 
             <p>
-              <strong>Fecha:</strong>
-              {' '}{formattedDate}
+              <strong>Fecha:</strong>{' '}
+              {formattedDate}
             </p>
-
           </div>
-
         </div>
 
         <div className="emergency-modal-footer">
-
           <p>
-            Este mensaje permanecerá disponible
-            en el historial de emergencias.
+            Puedes confirmar que leíste la emergencia
+            o cerrar el aviso sin confirmar.
           </p>
 
-          <button
-            ref={buttonRef}
-            type="button"
-            className="emergency-dismiss-button"
-            onClick={() => onDismiss(alert.id)}
-          >
-            Entendido — Cerrar aviso
-          </button>
+          {confirmationError && (
+            <p className="hu13-error" role="alert">
+              {confirmationError}
+            </p>
+          )}
 
+          <div className="hu13-modal-actions">
+            <button
+              ref={buttonRef}
+              type="button"
+              className="emergency-dismiss-button"
+              onClick={() => onDismiss(alert.id)}
+              disabled={confirming}
+            >
+              Cerrar aviso
+            </button>
+
+            <button
+              type="button"
+              className="hu13-confirm-button"
+              onClick={handleConfirm}
+              disabled={
+                !connected ||
+                confirming ||
+                confirmed
+              }
+            >
+              {confirmed
+                ? 'Lectura confirmada'
+                : confirming
+                  ? 'Confirmando...'
+                  : 'Confirmar lectura'}
+            </button>
+          </div>
         </div>
-
       </div>
     </div>
   )

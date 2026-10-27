@@ -1443,3 +1443,222 @@
     width: 100%;
   }
 }
+/* HU13 - Confirmaciones de emergencia */
+
+.hu13-panel {
+  margin-top: 20px;
+}
+
+.hu13-panel > p {
+  color: #52627b;
+  margin-bottom: 20px;
+}
+
+.hu13-list {
+  display: grid;
+  gap: 16px;
+}
+
+.hu13-item {
+  padding: 20px;
+  border: 1px solid #d9e1ed;
+  border-radius: 12px;
+  background: #f9fbff;
+}
+
+.hu13-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hu13-item-header strong {
+  color: #142b4b;
+  font-size: 17px;
+}
+
+.hu13-item-header p {
+  margin-top: 8px;
+  color: #52627b;
+}
+
+.hu13-count {
+  padding: 7px 12px;
+  background: #e9f2ff;
+  color: #174b89;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hu13-confirm-button {
+  padding: 12px 18px;
+  margin-top: 14px;
+  border: none;
+  border-radius: 9px;
+  background: #1d4e89;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.hu13-confirm-button:hover:not(:disabled) {
+  background: #143b69;
+}
+
+.hu13-confirm-button:disabled {
+  background: #91a8c5;
+  cursor: not-allowed;
+}
+
+.hu13-details {
+  margin-top: 18px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e1e7ef;
+  border-radius: 10px;
+}
+
+.hu13-details h3 {
+  margin: 0 0 12px;
+  color: #142b4b;
+  font-size: 15px;
+}
+
+.hu13-details ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.hu13-details li {
+  margin-bottom: 8px;
+  color: #52627b;
+  font-size: 14px;
+}
+
+.hu13-success {
+  color: #16804a;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.hu13-error {
+  color: #b91c1c;
+  background: #fff1f2;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.hu13-empty {
+  color: #64748b;
+  padding: 20px;
+  text-align: center;
+}
+
+.hu13-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hu13-modal-actions .hu13-confirm-button {
+  margin-top: 0;
+  background: #ba233d;
+}
+
+.hu13-modal-actions .hu13-confirm-button:hover:not(:disabled) {
+  background: #941a30;
+}
+
+@media (max-width: 600px) {
+  .hu13-item {
+    padding: 15px;
+  }
+
+  .hu13-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hu13-modal-actions button {
+    width: 100%;
+  }
+}
+
+/* Historial desplegable de emergencias */
+
+.emergencias-historial {
+  margin-top: 16px;
+  border: 1px solid #f0c4ca;
+  border-radius: 12px;
+  background: #fffafa;
+  overflow: hidden;
+}
+
+.emergencias-historial-resumen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  color: #972338;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.emergencias-historial-resumen::-webkit-details-marker {
+  display: none;
+}
+
+.emergencias-historial-resumen:hover {
+  background: #fff0f2;
+}
+
+.emergencias-historial-resumen:focus-visible {
+  outline: 2px solid #bf2738;
+  outline-offset: -2px;
+}
+
+.emergencias-historial-indicador {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b32940;
+}
+
+.emergencias-historial[open]
+.emergencias-historial-indicador {
+  font-size: 0;
+}
+
+.emergencias-historial[open]
+.emergencias-historial-indicador::after {
+  content: "Ocultar historial";
+  font-size: 12px;
+}
+
+.emergencias-historial-contenido {
+  padding: 0 16px 16px;
+  border-top: 1px solid #f0c4ca;
+}
+
+.emergencias-historial-contenido .emergencias-lista {
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.emergencias-historial-contenido .emergencia-recibida {
+  padding: 12px 14px;
+}
+
+.emergencias-historial-contenido .emergencia-recibida p {
+  margin-top: 8px;
+}

@@ -49,7 +49,13 @@ export const topics = {
     `${edificio(edificioId)}/alertas/emergencias/activas/+`,
 
   emergenciaActiva: (edificioId, alertId) =>
-    `${edificio(edificioId)}/alertas/emergencias/activas/${alertId}`,
+  `${edificio(edificioId)}/alertas/emergencias/activas/${alertId}`,
+
+  emergenciaAcuse: (edificioId, alertId, clientId) =>
+    `${edificio(edificioId)}/alertas/emergencias/acuses/${alertId}/${clientId}`,
+
+  emergenciasAcusesSuscripcion: (edificioId) =>
+    `${edificio(edificioId)}/alertas/emergencias/acuses/+/+`,
 },
   
   incidentes: {

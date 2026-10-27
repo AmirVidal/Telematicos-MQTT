@@ -20,6 +20,8 @@ import EmergencyAlerts from './components/EmergencyAlerts'
 import EmergencyNotification from './components/EmergencyNotification'
 import { useEmergencyAlert } from './hooks/useEmergencyAlert'
 import { canPublishEmergency } from './config/emergencyOptions'
+import { useEmergencyAcknowledgments } from './hooks/useEmergencyAcknowledgments'
+import EmergencyAcknowledgments from './components/EmergencyAcknowledgments'
 
 
 
@@ -84,7 +86,19 @@ function MqttDashboard({ user, onLogout }) {
     incidentReports,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
+  const {
+    acknowledgments,
+    acknowledgmentError,
+    confirmRead
+  } = useEmergencyAcknowledgments(clientRef, status)
 
+  async function handleConfirmRead(alertId) {
+    return confirmRead({
+      alertId,
+      user,
+      clientId
+    })
+  }
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
   const { sendIncident } = useIncidentReport(clientRef, user)
   const {
@@ -134,6 +148,16 @@ function handleDismissEmergency(alertId) {
     <EmergencyNotification
       alert={pendingEmergency}
       onDismiss={handleDismissEmergency}
+      connected={status === 'connected'}
+      confirmed={acknowledgments.some(
+        (item) =>
+          item.emergencyId === pendingEmergency?.id &&
+          item.userId === user.id
+      )}
+      onConfirm={async (alertId) => {
+        await handleConfirmRead(alertId)
+        handleDismissEmergency(alertId)
+      }}
     />
 
     <div className="contenedor">
@@ -184,6 +208,14 @@ function handleDismissEmergency(alertId) {
           subscriptionStatus={emergencySubscriptionStatus}
           canResolve={canPublishEmergency(user.role)}
           onResolve={markEmergencyResolved}
+        />
+        <EmergencyAcknowledgments
+          activeAlerts={activeEmergencies}
+          acknowledgments={acknowledgments}
+          user={user}
+          connected={status === 'connected'}
+          onConfirm={handleConfirmRead}
+          error={acknowledgmentError}
         />
 
         {canPublishEmergency(user.role) && (
