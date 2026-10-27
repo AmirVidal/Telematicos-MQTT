@@ -1,5 +1,5 @@
 import { useMqtt } from './hooks/useMqtt'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import UserIdentification from './components/UserIdentification'
 import ChannelSelector from './components/ChannelSelector'
 import ConnectedUsers from './components/ConnectedUsers'
@@ -15,6 +15,11 @@ import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
 import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
 import './App.css'
+import EmergencyAlertForm from './components/EmergencyAlertForm'
+import EmergencyAlerts from './components/EmergencyAlerts'
+import EmergencyNotification from './components/EmergencyNotification'
+import { useEmergencyAlert } from './hooks/useEmergencyAlert'
+import { canPublishEmergency } from './config/emergencyOptions'
 
 
 
@@ -41,6 +46,28 @@ function MqttDashboard({ user, onLogout }) {
   const [selectedChannelId, setSelectedChannelId] = useState(() =>
     getSelectedChannelId(user.id)
   )
+  const [
+  dismissedEmergencyIds,
+  setDismissedEmergencyIds
+] = useState(() => {
+
+  try {
+    const stored = sessionStorage.getItem(
+      `mqtt_hu12_dismissed_${user.id}`
+    )
+
+    if (!stored) return []
+
+    const parsed = JSON.parse(stored)
+
+    return Array.isArray(parsed)
+      ? parsed.filter((id) => typeof id === 'string')
+      : []
+
+  } catch {
+    return []
+  }
+})
 
   const {
     url,
@@ -51,12 +78,19 @@ function MqttDashboard({ user, onLogout }) {
     sendMessage,
     receivedMessages,
     supportRequests,
+    emergencyAlerts,
+    activeEmergencies,
+    emergencySubscriptionStatus,
     incidentReports,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
 
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
   const { sendIncident } = useIncidentReport(clientRef, user)
+  const {
+  sendEmergency,
+  markEmergencyResolved
+} = useEmergencyAlert(clientRef, user)
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
@@ -64,10 +98,45 @@ function MqttDashboard({ user, onLogout }) {
     setSelectedChannelId(channelId)
   }
   const estado = estados[status] ?? estados.disconnected
+useEffect(() => {
+
+  sessionStorage.setItem(
+    `mqtt_hu12_dismissed_${user.id}`,
+    JSON.stringify(dismissedEmergencyIds)
+  )
+
+}, [user.id, dismissedEmergencyIds])
+const pendingEmergency =
+  emergencyAlerts.find((alert) =>
+
+    activeEmergencies.some(
+      (active) => active.id === alert.id
+    ) &&
+
+    !dismissedEmergencyIds.includes(alert.id)
+
+  ) ?? null
+function handleDismissEmergency(alertId) {
+
+  setDismissedEmergencyIds((previous) => {
+
+    if (previous.includes(alertId)) {
+      return previous
+    }
+
+    return [...previous, alertId].slice(-100)
+  })
+}
 
   return (
-    <main className="pagina">
-      <div className="contenedor">
+  <main className="pagina">
+
+    <EmergencyNotification
+      alert={pendingEmergency}
+      onDismiss={handleDismissEmergency}
+    />
+
+    <div className="contenedor">
         <header className="cabecera">
           <div className="logo" aria-hidden="true">
             MQ
@@ -108,7 +177,21 @@ function MqttDashboard({ user, onLogout }) {
             </div>
           </dl>
         </section>
+        <EmergencyAlerts
+          alerts={emergencyAlerts}
+          activeAlerts={activeEmergencies}
+          connected={status === 'connected'}
+          subscriptionStatus={emergencySubscriptionStatus}
+          canResolve={canPublishEmergency(user.role)}
+          onResolve={markEmergencyResolved}
+        />
 
+        {canPublishEmergency(user.role) && (
+          <EmergencyAlertForm
+            connected={status === 'connected'}
+            onSend={sendEmergency}
+          />
+        )}        
         <ChannelSelector
           selectedChannelId={selectedChannelId}
           onSelectChannel={handleSelectChannel}
@@ -211,10 +294,23 @@ function App() {
   }
 
   function handleLogout() {
-    clearUserSession()
-    clearSelectedChannelId()
-    setUser(null)
+
+  if (user?.id) {
+
+    sessionStorage.removeItem(
+      `mqtt_hu12_alerts_${user.id}`
+    )
+
+    sessionStorage.removeItem(
+      `mqtt_hu12_dismissed_${user.id}`
+    )
   }
+
+  clearUserSession()
+  clearSelectedChannelId()
+
+  setUser(null)
+}
 
   if (!user) {
     return <UserIdentification onIdentify={handleIdentify} />

@@ -62,6 +62,7 @@ export function createMqttConnection({
 
   const options = {
     clientId,
+    protocolVersion: 5,
     clean: true,
     keepalive: 30,
     connectTimeout: 5000,

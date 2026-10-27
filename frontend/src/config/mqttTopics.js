@@ -33,10 +33,24 @@ export const topics = {
       `${edificio(edificioId)}/personal/${personalId}/presencia`,
   },
   alertas: {
-    base: (edificioId) => `${edificio(edificioId)}/alertas`,
-    tipo: (edificioId, tipo) =>
-      `${edificio(edificioId)}/alertas/${tipo}`,
-  },
+  base: (edificioId) =>
+    `${edificio(edificioId)}/alertas`,
+
+  tipo: (edificioId, tipo) =>
+    `${edificio(edificioId)}/alertas/${tipo}`,
+
+  emergencias: (edificioId) =>
+    `${edificio(edificioId)}/alertas/emergencias`,
+
+  emergenciasActivas: (edificioId) =>
+    `${edificio(edificioId)}/alertas/emergencias/activas`,
+
+  emergenciasActivasSuscripcion: (edificioId) =>
+    `${edificio(edificioId)}/alertas/emergencias/activas/+`,
+
+  emergenciaActiva: (edificioId, alertId) =>
+    `${edificio(edificioId)}/alertas/emergencias/activas/${alertId}`,
+},
   
   incidentes: {
    base: (edificioId) => `${edificio(edificioId)}/incidentes`,

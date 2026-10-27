@@ -1,5 +1,37 @@
-# ACLs para Telematicos-MQTT
+# ACLs Telematicos-MQTT - HU12
 
-# Permitir acceso completo a todos los usuarios autenticados
-pattern readwrite #
+# Permisos para los modulos existentes
+
+pattern readwrite edificio/+/personal/#
+pattern readwrite edificio/+/mensajeria/#
+pattern readwrite edificio/+/comandos/#
+pattern readwrite edificio/+/incidentes/#
+pattern readwrite edificio/+/telemetria/#
+
 pattern read $SYS/#
+
+# Lectura de alertas para todos los usuarios
+
+pattern read edificio/+/alertas/#
+
+# Alertas ordinarias
+
+pattern write edificio/+/alertas/incendio
+pattern write edificio/+/alertas/intrusion
+pattern write edificio/+/alertas/falla_electrica
+pattern write edificio/+/alertas/fuga_agua
+pattern write edificio/+/alertas/evacuacion
+pattern write edificio/+/alertas/general
+
+# Seguridad
+
+user seguridad
+topic write edificio/+/alertas/emergencias
+topic write edificio/+/alertas/emergencias/activas/+
+
+
+# Administracion
+
+user administracion
+topic write edificio/+/alertas/emergencias
+topic write edificio/+/alertas/emergencias/activas/+

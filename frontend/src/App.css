@@ -898,3 +898,548 @@
     align-items: stretch;
   }
 }
+
+/* HU12 - Alertas de emergencia */
+
+.emergencias-panel,
+.emergencia-formulario {
+  margin-bottom: 20px;
+  border-color: #f0b2b2;
+}
+
+.emergencias-panel {
+  background: linear-gradient(180deg, #fff8f8, #fff);
+  border-left: 5px solid #bf2738;
+}
+
+.emergencia-etiqueta {
+  color: #ad2333;
+}
+
+.emergencia-canal,
+.emergencia-qos {
+  flex: none;
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1px solid #f2b8be;
+  background: #fff0f1;
+  color: #a51e31;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.emergencia-estado-suscripcion,
+.emergencia-ayuda,
+.emergencia-sin-alertas {
+  color: #735b63;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.emergencia-estado-suscripcion {
+  margin: 16px 0 12px;
+}
+
+.emergencia-sin-alertas {
+  margin-bottom: 0;
+}
+
+.emergencias-lista {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 18px 0 0;
+  list-style: none;
+}
+
+.emergencia-recibida {
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid #ec9aa5;
+  background: #fff0f2;
+  overflow-wrap: anywhere;
+}
+
+.emergencia-recibida-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #98172d;
+}
+
+.emergencia-recibida-cabecera time,
+.emergencia-emisor {
+  color: #785865;
+  font-size: 12px;
+}
+
+.emergencia-recibida p {
+  margin: 12px 0 0;
+  color: #572b36;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.emergencia-recibida .emergencia-emisor {
+  color: #785865;
+  font-size: 12px;
+}
+
+.emergencia-formulario form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emergencia-formulario label {
+  color: #203c58;
+  font-weight: 600;
+}
+
+.emergencia-formulario input,
+.emergencia-formulario select,
+.emergencia-formulario textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  background: #fff;
+  color: #203c58;
+  font: inherit;
+}
+
+.emergencia-formulario textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.emergencia-formulario input:focus,
+.emergencia-formulario select:focus,
+.emergencia-formulario textarea:focus {
+  outline: 2px solid #c02b3c;
+  outline-offset: 1px;
+}
+
+.emergencia-pie-formulario,
+.emergencia-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.emergencia-pie-formulario span {
+  color: #7a8aa3;
+  font-size: 12px;
+}
+
+.emergencia-boton {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #ba263b;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.emergencia-boton:hover:not(:disabled) {
+  background: #941c30;
+}
+
+.emergencia-boton:disabled,
+.emergencia-cancelar:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Ventana de confirmacion */
+
+.emergencia-capa {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(24 30 45 / 62%);
+}
+
+.emergencia-dialogo {
+  box-sizing: border-box;
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 90px rgb(0 0 0 / 25%);
+}
+
+.emergencia-dialogo-simbolo {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  margin: 0 0 14px;
+  border-radius: 50%;
+  background: #fff0f1;
+  color: #b51e37;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.emergencia-dialogo h3 {
+  margin: 0;
+  color: #731a2b;
+  font-size: 21px;
+}
+
+.emergencia-dialogo > p {
+  color: #665c63;
+  line-height: 1.5;
+}
+
+.emergencia-resumen {
+  padding: 10px 16px;
+  border: 1px solid #f0d0d5;
+  border-radius: 12px;
+  background: #fffafb;
+}
+
+.emergencia-resumen div {
+  margin: 12px 0;
+}
+
+.emergencia-resumen dt {
+  color: #8c5965;
+  font-size: 12px;
+}
+
+.emergencia-resumen dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  color: #542b35;
+  white-space: pre-wrap;
+}
+
+.emergencia-acciones {
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.emergencia-cancelar {
+  padding: 12px 18px;
+  border: 1px solid #ccd6e2;
+  border-radius: 10px;
+  background: white;
+  color: #34495f;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Adaptacion para celulares */
+
+@media (max-width: 600px) {
+  .emergencia-formulario .tarjeta-cabecera,
+  .emergencias-panel .tarjeta-cabecera,
+  .emergencia-pie-formulario,
+  .emergencia-acciones {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .emergencia-qos,
+  .emergencia-canal {
+    align-self: flex-start;
+  }
+
+  .emergencia-dialogo {
+    padding: 20px;
+  }
+}
+/* HU12 - Notificacion emergente */
+
+.emergency-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.emergency-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  background: #ffffff;
+  border: 2px solid #dc2626;
+  border-radius: 18px;
+
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+
+  animation: emergencyAppear 0.25s ease-out;
+}
+
+@keyframes emergencyAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.emergency-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 24px;
+
+  background: #b91c1c;
+  color: white;
+}
+
+.emergency-modal-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.2);
+
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.emergency-modal-label {
+  margin: 0 0 5px;
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.emergency-modal-header h2 {
+  margin: 0;
+
+  color: white;
+  font-size: 23px;
+}
+
+.emergency-modal-body {
+  padding: 25px;
+}
+
+.emergency-modal-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.emergency-modal-detail strong {
+  color: #7f1d1d;
+  font-size: 14px;
+}
+
+.emergency-modal-detail span {
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.emergency-modal-description {
+  padding: 16px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.emergency-modal-description strong {
+  color: #991b1b;
+  font-size: 14px;
+}
+
+.emergency-modal-description p {
+  margin: 10px 0 0;
+
+  color: #374151;
+  line-height: 1.6;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.emergency-modal-info {
+  margin-top: 20px;
+}
+
+.emergency-modal-info p {
+  margin: 7px 0;
+
+  color: #6b7280;
+  font-size: 13px;
+
+  overflow-wrap: anywhere;
+}
+
+.emergency-modal-info strong {
+  color: #374151;
+}
+
+.emergency-modal-footer {
+  padding: 20px 25px;
+
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.emergency-modal-footer p {
+  margin: 0 0 15px;
+
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+.emergency-dismiss-button {
+  width: 100%;
+
+  padding: 13px 20px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #b91c1c;
+  color: white;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.emergency-dismiss-button:hover {
+  background: #991b1b;
+}
+
+.emergency-dismiss-button:focus-visible {
+  outline: 3px solid #fca5a5;
+  outline-offset: 3px;
+}
+
+/* Adaptacion para celulares */
+
+@media (max-width: 600px) {
+
+  .emergency-overlay {
+    padding: 12px;
+  }
+
+  .emergency-modal-header {
+    padding: 20px;
+  }
+
+  .emergency-modal-header h2 {
+    font-size: 19px;
+  }
+
+  .emergency-modal-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 25px;
+  }
+
+  .emergency-modal-body {
+    padding: 20px;
+  }
+
+  .emergency-modal-footer {
+    padding: 20px;
+  }
+}
+
+/* HU12 - Emergencias activas */
+
+.emergencias-activas-contenedor {
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid #f0c4ca;
+  border-radius: 12px;
+  background: #fffafa;
+}
+
+.emergencias-activas-contenedor h3,
+.emergencias-historial-titulo {
+  margin: 0 0 12px;
+  color: #972338;
+  font-size: 16px;
+}
+
+.emergencias-historial-titulo {
+  margin: 20px 0 0;
+}
+
+.emergencia-resolver {
+  margin-top: 14px;
+  padding: 10px 16px;
+
+  border: 1px solid #b71e34;
+  border-radius: 10px;
+
+  background: white;
+  color: #972338;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.emergencia-resolver:hover:not(:disabled) {
+  background: #fff0f1;
+}
+
+.emergencia-resolver:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .emergencias-activas-contenedor {
+    padding: 12px;
+  }
+
+  .emergencia-resolver {
+    width: 100%;
+  }
+}
