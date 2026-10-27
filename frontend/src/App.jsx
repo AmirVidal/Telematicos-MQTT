@@ -7,6 +7,7 @@ import MessageComposer from './components/MessageComposer'
 import ReceivedMessages from './components/ReceivedMessages'
 import SupportRequestForm from './components/SupportRequestForm'
 import IncidentReportForm from './components/IncidentReportForm'
+import IncidentReportsList from './components/IncidentReportsList'
 import { useIncidentReport } from './hooks/useIncidentReport'
 import SupportRequestsList from './components/SupportRequestsList'
 import { useSupportRequest } from './hooks/useSupportRequest'
@@ -50,7 +51,7 @@ function MqttDashboard({ user, onLogout }) {
     sendMessage,
     receivedMessages,
     supportRequests,
-    subscribedChannelId,
+    incidentReports,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
 
@@ -136,6 +137,14 @@ function MqttDashboard({ user, onLogout }) {
            connected={status === 'connected'}
            onSend={sendIncident}
           />
+         
+          {(user.role === 'seguridad' ||
+           user.role === 'administracion') && (
+           <IncidentReportsList
+           reports={incidentReports}
+           currentUserId={user.id}
+           />
+          )}
 
         <SupportRequestForm
           connected={status === 'connected'}

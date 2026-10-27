@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react'
 import { publishSupportRequest } from '../services/supportRequestPublisher'
 
@@ -20,7 +21,7 @@ export function useSupportRequest(clientRef, user) {
         description
       })
     },
-    [clientRef, user?.id, user?.name, user?.role]
+    [clientRef, user]
   )
 
   return { sendSupportRequest }
