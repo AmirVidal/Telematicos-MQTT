@@ -1,12 +1,7 @@
 import { useMqtt } from './hooks/useMqtt'
 import { useEffect, useState } from 'react'
 import UserIdentification from './components/UserIdentification'
-import ConnectedUsers from './components/ConnectedUsers'
-import SupportRequestForm from './components/SupportRequestForm'
-import IncidentReportForm from './components/IncidentReportForm'
-import IncidentReportsList from './components/IncidentReportsList'
 import { useIncidentReport } from './hooks/useIncidentReport'
-import SupportRequestsList from './components/SupportRequestsList'
 import { useSupportRequest } from './hooks/useSupportRequest'
 import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
@@ -24,6 +19,9 @@ import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import MessagingView from './components/messaging/MessagingView'
 import EmergencyView from './components/emergency/EmergencyView'
+import IncidentView from './components/incidents/IncidentView'
+import SupportView from './components/support/SupportView'
+import PersonnelView from './components/personnel/PersonnelView'
 
 function MqttDashboard({ user, onLogout }) {
   const [seccionActiva, setSeccionActiva] = useState('mensajeria')
@@ -154,7 +152,7 @@ function MqttDashboard({ user, onLogout }) {
             )}
 
             {seccionActiva === 'personal' && (
-              <ConnectedUsers
+              <PersonnelView
                 users={connectedUsers}
                 currentUserId={user.id}
                 connectionStatus={status}
@@ -162,26 +160,21 @@ function MqttDashboard({ user, onLogout }) {
             )}
 
             {seccionActiva === 'incidentes' && (
-              <>
-                <IncidentReportForm connected={status === 'connected'} onSend={sendIncident} />
-
-                {(user.role === 'seguridad' || user.role === 'administracion') && (
-                  <IncidentReportsList reports={incidentReports} currentUserId={user.id} />
-                )}
-              </>
+              <IncidentView
+                user={user}
+                connected={status === 'connected'}
+                onSend={sendIncident}
+                reports={incidentReports}
+              />
             )}
 
             {seccionActiva === 'soporte' && (
-              <>
-                <SupportRequestForm
-                  connected={status === 'connected'}
-                  onSend={sendSupportRequest}
-                />
-
-                {(user.role === 'mantenimiento' || user.role === 'administracion') && (
-                  <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
-                )}
-              </>
+              <SupportView
+                user={user}
+                connected={status === 'connected'}
+                onSend={sendSupportRequest}
+                requests={supportRequests}
+              />
             )}
             <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
           </div>
