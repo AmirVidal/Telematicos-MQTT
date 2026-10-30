@@ -16,35 +16,14 @@ import {
   clearSelectedChannelId
 } from './services/channelSession'
 import './App.css'
-import EmergencyAlertForm from './components/EmergencyAlertForm'
-import EmergencyAlerts from './components/EmergencyAlerts'
 import EmergencyNotification from './components/EmergencyNotification'
 import { useEmergencyAlert } from './hooks/useEmergencyAlert'
 import { canPublishEmergency } from './config/emergencyOptions'
 import { useEmergencyAcknowledgments } from './hooks/useEmergencyAcknowledgments'
-import EmergencyAcknowledgments from './components/EmergencyAcknowledgments'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import MessagingView from './components/messaging/MessagingView'
-
-const estados = {
-  connecting: {
-    titulo: 'Conectando',
-    descripcion: 'Estableciendo conexión con el broker MQTT.'
-  },
-  connected: {
-    titulo: 'Conectado',
-    descripcion: 'La conexión con el broker MQTT está activa.'
-  },
-  reconnecting: {
-    titulo: 'Reconectando',
-    descripcion: 'Intentando restablecer la conexión automáticamente.'
-  },
-  disconnected: {
-    titulo: 'Desconectado',
-    descripcion: 'La conexión se interrumpió. Se intentará recuperar.'
-  }
-}
+import EmergencyView from './components/emergency/EmergencyView'
 
 function MqttDashboard({ user, onLogout }) {
   const [seccionActiva, setSeccionActiva] = useState('mensajeria')
@@ -147,29 +126,19 @@ function MqttDashboard({ user, onLogout }) {
         <div className="dashboard-contenido">
           <div className="contenedor">
             {seccionActiva === 'emergencias' && (
-              <>
-                <EmergencyAlerts
-                  alerts={emergencyAlerts}
-                  activeAlerts={activeEmergencies}
-                  connected={status === 'connected'}
-                  subscriptionStatus={emergencySubscriptionStatus}
-                  canResolve={canPublishEmergency(user.role)}
-                  onResolve={markEmergencyResolved}
-                />
-
-                <EmergencyAcknowledgments
-                  activeAlerts={activeEmergencies}
-                  acknowledgments={acknowledgments}
-                  user={user}
-                  connected={status === 'connected'}
-                  onConfirm={handleConfirmRead}
-                  error={acknowledgmentError}
-                />
-
-                {canPublishEmergency(user.role) && (
-                  <EmergencyAlertForm connected={status === 'connected'} onSend={sendEmergency} />
-                )}
-              </>
+              <EmergencyView
+                alerts={emergencyAlerts}
+                activeAlerts={activeEmergencies}
+                subscriptionStatus={emergencySubscriptionStatus}
+                acknowledgments={acknowledgments}
+                acknowledgmentError={acknowledgmentError}
+                user={user}
+                connected={status === 'connected'}
+                canResolve={canPublishEmergency(user.role)}
+                onResolve={markEmergencyResolved}
+                onConfirm={handleConfirmRead}
+                onSend={sendEmergency}
+              />
             )}
 
             {seccionActiva === 'mensajeria' && (
