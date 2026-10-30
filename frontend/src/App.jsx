@@ -1,10 +1,7 @@
 import { useMqtt } from './hooks/useMqtt'
 import { useEffect, useState } from 'react'
 import UserIdentification from './components/UserIdentification'
-import ChannelSelector from './components/ChannelSelector'
 import ConnectedUsers from './components/ConnectedUsers'
-import MessageComposer from './components/MessageComposer'
-import ReceivedMessages from './components/ReceivedMessages'
 import SupportRequestForm from './components/SupportRequestForm'
 import IncidentReportForm from './components/IncidentReportForm'
 import IncidentReportsList from './components/IncidentReportsList'
@@ -28,6 +25,7 @@ import { useEmergencyAcknowledgments } from './hooks/useEmergencyAcknowledgments
 import EmergencyAcknowledgments from './components/EmergencyAcknowledgments'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
+import MessagingView from './components/messaging/MessagingView'
 
 const estados = {
   connecting: {
@@ -175,25 +173,15 @@ function MqttDashboard({ user, onLogout }) {
             )}
 
             {seccionActiva === 'mensajeria' && (
-              <>
-                <ChannelSelector
-                  selectedChannelId={selectedChannelId}
-                  onSelectChannel={handleSelectChannel}
-                />
-
-                <ReceivedMessages
-                  messages={receivedMessages}
-                  currentUserId={user.id}
-                  channelName={selectedChannel?.name ?? null}
-                />
-
-                <MessageComposer
-                  channelId={selectedChannelId}
-                  channelName={selectedChannel?.name ?? 'Sin seleccionar'}
-                  connected={status === 'connected'}
-                  onSend={sendMessage}
-                />
-              </>
+              <MessagingView
+                selectedChannelId={selectedChannelId}
+                onSelectChannel={handleSelectChannel}
+                selectedChannel={selectedChannel}
+                receivedMessages={receivedMessages}
+                currentUserId={user.id}
+                connected={status === 'connected'}
+                onSend={sendMessage}
+              />
             )}
 
             {seccionActiva === 'personal' && (

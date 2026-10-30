@@ -1580,12 +1580,13 @@
 .dashboard-contenido {
   flex: 1;
   min-width: 0;
-  padding: 28px 24px;
+  padding: 24px;
 }
 
 .dashboard-contenido .contenedor {
-  width: min(100%, 1100px);
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding-top: 0;
 }
 
