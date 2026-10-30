@@ -13,7 +13,11 @@ import SupportRequestsList from './components/SupportRequestsList'
 import { useSupportRequest } from './hooks/useSupportRequest'
 import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
-import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
+import {
+  getSelectedChannelId,
+  saveSelectedChannelId,
+  clearSelectedChannelId
+} from './services/channelSession'
 import './App.css'
 import EmergencyAlertForm from './components/EmergencyAlertForm'
 import EmergencyAlerts from './components/EmergencyAlerts'
@@ -22,8 +26,7 @@ import { useEmergencyAlert } from './hooks/useEmergencyAlert'
 import { canPublishEmergency } from './config/emergencyOptions'
 import { useEmergencyAcknowledgments } from './hooks/useEmergencyAcknowledgments'
 import EmergencyAcknowledgments from './components/EmergencyAcknowledgments'
-
-
+import Header from './components/layout/Header'
 
 const estados = {
   connecting: {
@@ -45,31 +48,20 @@ const estados = {
 }
 
 function MqttDashboard({ user, onLogout }) {
-  const [selectedChannelId, setSelectedChannelId] = useState(() =>
-    getSelectedChannelId(user.id)
-  )
-  const [
-  dismissedEmergencyIds,
-  setDismissedEmergencyIds
-] = useState(() => {
+  const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
+  const [dismissedEmergencyIds, setDismissedEmergencyIds] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(`mqtt_hu12_dismissed_${user.id}`)
 
-  try {
-    const stored = sessionStorage.getItem(
-      `mqtt_hu12_dismissed_${user.id}`
-    )
+      if (!stored) return []
 
-    if (!stored) return []
+      const parsed = JSON.parse(stored)
 
-    const parsed = JSON.parse(stored)
-
-    return Array.isArray(parsed)
-      ? parsed.filter((id) => typeof id === 'string')
-      : []
-
-  } catch {
-    return []
-  }
-})
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : []
+    } catch {
+      return []
+    }
+  })
 
   const {
     url,
@@ -86,11 +78,10 @@ function MqttDashboard({ user, onLogout }) {
     incidentReports,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
-  const {
-    acknowledgments,
-    acknowledgmentError,
-    confirmRead
-  } = useEmergencyAcknowledgments(clientRef, status)
+  const { acknowledgments, acknowledgmentError, confirmRead } = useEmergencyAcknowledgments(
+    clientRef,
+    status
+  )
 
   async function handleConfirmRead(alertId) {
     return confirmRead({
@@ -101,10 +92,7 @@ function MqttDashboard({ user, onLogout }) {
   }
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
   const { sendIncident } = useIncidentReport(clientRef, user)
-  const {
-  sendEmergency,
-  markEmergencyResolved
-} = useEmergencyAlert(clientRef, user)
+  const { sendEmergency, markEmergencyResolved } = useEmergencyAlert(clientRef, user)
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
@@ -112,95 +100,42 @@ function MqttDashboard({ user, onLogout }) {
     setSelectedChannelId(channelId)
   }
   const estado = estados[status] ?? estados.disconnected
-useEffect(() => {
+  useEffect(() => {
+    sessionStorage.setItem(`mqtt_hu12_dismissed_${user.id}`, JSON.stringify(dismissedEmergencyIds))
+  }, [user.id, dismissedEmergencyIds])
+  const pendingEmergency =
+    emergencyAlerts.find(
+      (alert) =>
+        activeEmergencies.some((active) => active.id === alert.id) &&
+        !dismissedEmergencyIds.includes(alert.id)
+    ) ?? null
+  function handleDismissEmergency(alertId) {
+    setDismissedEmergencyIds((previous) => {
+      if (previous.includes(alertId)) {
+        return previous
+      }
 
-  sessionStorage.setItem(
-    `mqtt_hu12_dismissed_${user.id}`,
-    JSON.stringify(dismissedEmergencyIds)
-  )
-
-}, [user.id, dismissedEmergencyIds])
-const pendingEmergency =
-  emergencyAlerts.find((alert) =>
-
-    activeEmergencies.some(
-      (active) => active.id === alert.id
-    ) &&
-
-    !dismissedEmergencyIds.includes(alert.id)
-
-  ) ?? null
-function handleDismissEmergency(alertId) {
-
-  setDismissedEmergencyIds((previous) => {
-
-    if (previous.includes(alertId)) {
-      return previous
-    }
-
-    return [...previous, alertId].slice(-100)
-  })
-}
+      return [...previous, alertId].slice(-100)
+    })
+  }
 
   return (
-  <main className="pagina">
+    <main className="pagina">
+      <EmergencyNotification
+        alert={pendingEmergency}
+        onDismiss={handleDismissEmergency}
+        connected={status === 'connected'}
+        confirmed={acknowledgments.some(
+          (item) => item.emergencyId === pendingEmergency?.id && item.userId === user.id
+        )}
+        onConfirm={async (alertId) => {
+          await handleConfirmRead(alertId)
+          handleDismissEmergency(alertId)
+        }}
+      />
 
-    <EmergencyNotification
-      alert={pendingEmergency}
-      onDismiss={handleDismissEmergency}
-      connected={status === 'connected'}
-      confirmed={acknowledgments.some(
-        (item) =>
-          item.emergencyId === pendingEmergency?.id &&
-          item.userId === user.id
-      )}
-      onConfirm={async (alertId) => {
-        await handleConfirmRead(alertId)
-        handleDismissEmergency(alertId)
-      }}
-    />
-
-    <div className="contenedor">
-        <header className="cabecera">
-          <div className="logo" aria-hidden="true">
-            MQ
-          </div>
-          <div>
-            <p className="subtitulo-superior">Servicios Telemáticos</p>
-            <h1>Sistema de mensajería MQTT</h1>
-            <p className="subtitulo">Comunicación del personal operativo del edificio</p>
-          </div>
-        </header>
-
-        <section className="tarjeta perfil-usuario">
-          <div className="tarjeta-cabecera">
-            <div>
-              <p className="seccion-etiqueta">Identificación</p>
-              <h2>Personal identificado</h2>
-            </div>
-
-            <button type="button" className="boton-salir" onClick={onLogout}>
-              Cerrar sesión
-            </button>
-          </div>
-
-          <dl className="datos-conexion">
-            <div>
-              <dt>Nombre</dt>
-              <dd>{user.name}</dd>
-            </div>
-
-            <div>
-              <dt>Tipo de personal</dt>
-              <dd>{user.role}</dd>
-            </div>
-
-            <div>
-              <dt>Identificador de sesión</dt>
-              <dd>{user.id}</dd>
-            </div>
-          </dl>
-        </section>
+      <Header user={user} status={status} onLogout={onLogout} />
+      <div className="contenedor">
         <EmergencyAlerts
           alerts={emergencyAlerts}
           activeAlerts={activeEmergencies}
@@ -219,11 +154,8 @@ function handleDismissEmergency(alertId) {
         />
 
         {canPublishEmergency(user.role) && (
-          <EmergencyAlertForm
-            connected={status === 'connected'}
-            onSend={sendEmergency}
-          />
-        )}        
+          <EmergencyAlertForm connected={status === 'connected'} onSend={sendEmergency} />
+        )}
         <ChannelSelector
           selectedChannelId={selectedChannelId}
           onSelectChannel={handleSelectChannel}
@@ -236,35 +168,21 @@ function handleDismissEmergency(alertId) {
           onSend={sendMessage}
         />
 
-        <ConnectedUsers
-          users={connectedUsers}
-          currentUserId={user.id}
-          connectionStatus={status}
-        />
+        <ConnectedUsers users={connectedUsers} currentUserId={user.id} connectionStatus={status} />
 
         <ReceivedMessages
           messages={receivedMessages}
           currentUserId={user.id}
           channelName={selectedChannel?.name ?? null}
         />
-        
-         <IncidentReportForm
-           connected={status === 'connected'}
-           onSend={sendIncident}
-          />
-         
-          {(user.role === 'seguridad' ||
-           user.role === 'administracion') && (
-           <IncidentReportsList
-           reports={incidentReports}
-           currentUserId={user.id}
-           />
-          )}
 
-        <SupportRequestForm
-          connected={status === 'connected'}
-          onSend={sendSupportRequest}
-        />
+        <IncidentReportForm connected={status === 'connected'} onSend={sendIncident} />
+
+        {(user.role === 'seguridad' || user.role === 'administracion') && (
+          <IncidentReportsList reports={incidentReports} currentUserId={user.id} />
+        )}
+
+        <SupportRequestForm connected={status === 'connected'} onSend={sendSupportRequest} />
 
         {(user.role === 'mantenimiento' || user.role === 'administracion') && (
           <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
@@ -326,23 +244,17 @@ function App() {
   }
 
   function handleLogout() {
+    if (user?.id) {
+      sessionStorage.removeItem(`mqtt_hu12_alerts_${user.id}`)
 
-  if (user?.id) {
+      sessionStorage.removeItem(`mqtt_hu12_dismissed_${user.id}`)
+    }
 
-    sessionStorage.removeItem(
-      `mqtt_hu12_alerts_${user.id}`
-    )
+    clearUserSession()
+    clearSelectedChannelId()
 
-    sessionStorage.removeItem(
-      `mqtt_hu12_dismissed_${user.id}`
-    )
+    setUser(null)
   }
-
-  clearUserSession()
-  clearSelectedChannelId()
-
-  setUser(null)
-}
 
   if (!user) {
     return <UserIdentification onIdentify={handleIdentify} />
