@@ -19,7 +19,8 @@ function formatTimestamp(timestamp) {
 export default function ReceivedMessages({
   messages = [],
   currentUserId = null,
-  channelName = null
+  channelName = null,
+  compact = false
 }) {
   const sortedMessages = useMemo(() => {
     if (!Array.isArray(messages)) {
@@ -46,18 +47,19 @@ export default function ReceivedMessages({
 
   return (
     <section className="tarjeta mensajes-recibidos">
-      <div className="tarjeta-cabecera">
-        <div>
-          <p className="seccion-etiqueta">MENSAJES RECIBIDOS</p>
-          <h2>Mensajes en tiempo real</h2>
+      {!compact && (
+        <div className="tarjeta-cabecera">
+          <div>
+            <p className="seccion-etiqueta">MENSAJES RECIBIDOS</p>
+            <h2>Mensajes en tiempo real</h2>
+          </div>
+
+          {channelName && <span className="etiqueta-canal">{channelName}</span>}
         </div>
-        {channelName ? <span className="etiqueta-canal">{channelName}</span> : null}
-      </div>
+      )}
 
       {sortedMessages.length === 0 ? (
-        <p className="mensajes-vacios">
-          Aún no se han recibido mensajes en este canal.
-        </p>
+        <p className="mensajes-vacios">Aún no se han recibido mensajes en este canal.</p>
       ) : (
         <ul className="lista-mensajes">
           {sortedMessages.map((message) => {
@@ -74,9 +76,7 @@ export default function ReceivedMessages({
                 <div className="mensaje-cabecera">
                   <div>
                     <span className="mensaje-autor">{authorName}</span>
-                    {authorRole ? (
-                      <span className="mensaje-rol"> · {authorRole}</span>
-                    ) : null}
+                    {authorRole ? <span className="mensaje-rol"> · {authorRole}</span> : null}
                   </div>
                   <time className="mensaje-fecha" dateTime={message.timestamp}>
                     {formatTimestamp(message.timestamp)}

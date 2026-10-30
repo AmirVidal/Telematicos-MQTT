@@ -1,75 +1,44 @@
 import { useMqtt } from './hooks/useMqtt'
 import { useEffect, useState } from 'react'
 import UserIdentification from './components/UserIdentification'
-import ChannelSelector from './components/ChannelSelector'
-import ConnectedUsers from './components/ConnectedUsers'
-import MessageComposer from './components/MessageComposer'
-import ReceivedMessages from './components/ReceivedMessages'
-import SupportRequestForm from './components/SupportRequestForm'
-import IncidentReportForm from './components/IncidentReportForm'
-import IncidentReportsList from './components/IncidentReportsList'
 import { useIncidentReport } from './hooks/useIncidentReport'
-import SupportRequestsList from './components/SupportRequestsList'
 import { useSupportRequest } from './hooks/useSupportRequest'
 import { getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
-import { getSelectedChannelId, saveSelectedChannelId, clearSelectedChannelId } from './services/channelSession'
+import {
+  getSelectedChannelId,
+  saveSelectedChannelId,
+  clearSelectedChannelId
+} from './services/channelSession'
 import './App.css'
-import EmergencyAlertForm from './components/EmergencyAlertForm'
-import EmergencyAlerts from './components/EmergencyAlerts'
 import EmergencyNotification from './components/EmergencyNotification'
 import { useEmergencyAlert } from './hooks/useEmergencyAlert'
 import { canPublishEmergency } from './config/emergencyOptions'
 import { useEmergencyAcknowledgments } from './hooks/useEmergencyAcknowledgments'
-import EmergencyAcknowledgments from './components/EmergencyAcknowledgments'
-
-
-
-const estados = {
-  connecting: {
-    titulo: 'Conectando',
-    descripcion: 'Estableciendo conexión con el broker MQTT.'
-  },
-  connected: {
-    titulo: 'Conectado',
-    descripcion: 'La conexión con el broker MQTT está activa.'
-  },
-  reconnecting: {
-    titulo: 'Reconectando',
-    descripcion: 'Intentando restablecer la conexión automáticamente.'
-  },
-  disconnected: {
-    titulo: 'Desconectado',
-    descripcion: 'La conexión se interrumpió. Se intentará recuperar.'
-  }
-}
+import Header from './components/layout/Header'
+import Sidebar from './components/layout/Sidebar'
+import MessagingView from './components/messaging/MessagingView'
+import EmergencyView from './components/emergency/EmergencyView'
+import IncidentView from './components/incidents/IncidentView'
+import SupportView from './components/support/SupportView'
+import PersonnelView from './components/personnel/PersonnelView'
 
 function MqttDashboard({ user, onLogout }) {
-  const [selectedChannelId, setSelectedChannelId] = useState(() =>
-    getSelectedChannelId(user.id)
-  )
-  const [
-  dismissedEmergencyIds,
-  setDismissedEmergencyIds
-] = useState(() => {
+  const [seccionActiva, setSeccionActiva] = useState('mensajeria')
+  const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
+  const [dismissedEmergencyIds, setDismissedEmergencyIds] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem(`mqtt_hu12_dismissed_${user.id}`)
 
-  try {
-    const stored = sessionStorage.getItem(
-      `mqtt_hu12_dismissed_${user.id}`
-    )
+      if (!stored) return []
 
-    if (!stored) return []
+      const parsed = JSON.parse(stored)
 
-    const parsed = JSON.parse(stored)
-
-    return Array.isArray(parsed)
-      ? parsed.filter((id) => typeof id === 'string')
-      : []
-
-  } catch {
-    return []
-  }
-})
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : []
+    } catch {
+      return []
+    }
+  })
 
   const {
     url,
@@ -86,11 +55,10 @@ function MqttDashboard({ user, onLogout }) {
     incidentReports,
     clientRef
   } = useMqtt(user, undefined, selectedChannelId)
-  const {
-    acknowledgments,
-    acknowledgmentError,
-    confirmRead
-  } = useEmergencyAcknowledgments(clientRef, status)
+  const { acknowledgments, acknowledgmentError, confirmRead } = useEmergencyAcknowledgments(
+    clientRef,
+    status
+  )
 
   async function handleConfirmRead(alertId) {
     return confirmRead({
@@ -101,218 +69,116 @@ function MqttDashboard({ user, onLogout }) {
   }
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
   const { sendIncident } = useIncidentReport(clientRef, user)
-  const {
-  sendEmergency,
-  markEmergencyResolved
-} = useEmergencyAlert(clientRef, user)
+  const { sendEmergency, markEmergencyResolved } = useEmergencyAlert(clientRef, user)
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
     saveSelectedChannelId(user.id, channelId)
     setSelectedChannelId(channelId)
   }
-  const estado = estados[status] ?? estados.disconnected
-useEffect(() => {
+  useEffect(() => {
+    sessionStorage.setItem(`mqtt_hu12_dismissed_${user.id}`, JSON.stringify(dismissedEmergencyIds))
+  }, [user.id, dismissedEmergencyIds])
+  const pendingEmergency =
+    emergencyAlerts.find(
+      (alert) =>
+        activeEmergencies.some((active) => active.id === alert.id) &&
+        !dismissedEmergencyIds.includes(alert.id)
+    ) ?? null
+  function handleDismissEmergency(alertId) {
+    setDismissedEmergencyIds((previous) => {
+      if (previous.includes(alertId)) {
+        return previous
+      }
 
-  sessionStorage.setItem(
-    `mqtt_hu12_dismissed_${user.id}`,
-    JSON.stringify(dismissedEmergencyIds)
-  )
-
-}, [user.id, dismissedEmergencyIds])
-const pendingEmergency =
-  emergencyAlerts.find((alert) =>
-
-    activeEmergencies.some(
-      (active) => active.id === alert.id
-    ) &&
-
-    !dismissedEmergencyIds.includes(alert.id)
-
-  ) ?? null
-function handleDismissEmergency(alertId) {
-
-  setDismissedEmergencyIds((previous) => {
-
-    if (previous.includes(alertId)) {
-      return previous
-    }
-
-    return [...previous, alertId].slice(-100)
-  })
-}
+      return [...previous, alertId].slice(-100)
+    })
+  }
 
   return (
-  <main className="pagina">
-
-    <EmergencyNotification
-      alert={pendingEmergency}
-      onDismiss={handleDismissEmergency}
-      connected={status === 'connected'}
-      confirmed={acknowledgments.some(
-        (item) =>
-          item.emergencyId === pendingEmergency?.id &&
-          item.userId === user.id
-      )}
-      onConfirm={async (alertId) => {
-        await handleConfirmRead(alertId)
-        handleDismissEmergency(alertId)
-      }}
-    />
-
-    <div className="contenedor">
-        <header className="cabecera">
-          <div className="logo" aria-hidden="true">
-            MQ
-          </div>
-          <div>
-            <p className="subtitulo-superior">Servicios Telemáticos</p>
-            <h1>Sistema de mensajería MQTT</h1>
-            <p className="subtitulo">Comunicación del personal operativo del edificio</p>
-          </div>
-        </header>
-
-        <section className="tarjeta perfil-usuario">
-          <div className="tarjeta-cabecera">
-            <div>
-              <p className="seccion-etiqueta">Identificación</p>
-              <h2>Personal identificado</h2>
-            </div>
-
-            <button type="button" className="boton-salir" onClick={onLogout}>
-              Cerrar sesión
-            </button>
-          </div>
-
-          <dl className="datos-conexion">
-            <div>
-              <dt>Nombre</dt>
-              <dd>{user.name}</dd>
-            </div>
-
-            <div>
-              <dt>Tipo de personal</dt>
-              <dd>{user.role}</dd>
-            </div>
-
-            <div>
-              <dt>Identificador de sesión</dt>
-              <dd>{user.id}</dd>
-            </div>
-          </dl>
-        </section>
-        <EmergencyAlerts
-          alerts={emergencyAlerts}
-          activeAlerts={activeEmergencies}
-          connected={status === 'connected'}
-          subscriptionStatus={emergencySubscriptionStatus}
-          canResolve={canPublishEmergency(user.role)}
-          onResolve={markEmergencyResolved}
-        />
-        <EmergencyAcknowledgments
-          activeAlerts={activeEmergencies}
-          acknowledgments={acknowledgments}
-          user={user}
-          connected={status === 'connected'}
-          onConfirm={handleConfirmRead}
-          error={acknowledgmentError}
-        />
-
-        {canPublishEmergency(user.role) && (
-          <EmergencyAlertForm
-            connected={status === 'connected'}
-            onSend={sendEmergency}
-          />
-        )}        
-        <ChannelSelector
-          selectedChannelId={selectedChannelId}
-          onSelectChannel={handleSelectChannel}
-        />
-
-        <MessageComposer
-          channelId={selectedChannelId}
-          channelName={selectedChannel?.name ?? 'Sin seleccionar'}
-          connected={status === 'connected'}
-          onSend={sendMessage}
-        />
-
-        <ConnectedUsers
-          users={connectedUsers}
-          currentUserId={user.id}
-          connectionStatus={status}
-        />
-
-        <ReceivedMessages
-          messages={receivedMessages}
-          currentUserId={user.id}
-          channelName={selectedChannel?.name ?? null}
-        />
-        
-         <IncidentReportForm
-           connected={status === 'connected'}
-           onSend={sendIncident}
-          />
-         
-          {(user.role === 'seguridad' ||
-           user.role === 'administracion') && (
-           <IncidentReportsList
-           reports={incidentReports}
-           currentUserId={user.id}
-           />
-          )}
-
-        <SupportRequestForm
-          connected={status === 'connected'}
-          onSend={sendSupportRequest}
-        />
-
-        {(user.role === 'mantenimiento' || user.role === 'administracion') && (
-          <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
+    <main className="pagina">
+      <EmergencyNotification
+        alert={pendingEmergency}
+        onDismiss={handleDismissEmergency}
+        connected={status === 'connected'}
+        confirmed={acknowledgments.some(
+          (item) => item.emergencyId === pendingEmergency?.id && item.userId === user.id
         )}
+        onConfirm={async (alertId) => {
+          await handleConfirmRead(alertId)
+          handleDismissEmergency(alertId)
+        }}
+      />
 
-        <section className="tarjeta" aria-labelledby="titulo-conexion">
-          <div className="tarjeta-cabecera">
-            <div>
-              <p className="seccion-etiqueta">Conexión en tiempo real</p>
-              <h2 id="titulo-conexion">Estado del broker MQTT</h2>
-            </div>
-            <span className="etiqueta-protocolo">WebSocket</span>
+      <Header
+        user={user}
+        status={status}
+        url={url}
+        clientId={clientId}
+        error={error}
+        onLogout={onLogout}
+      />
+      <div className="dashboard-estructura">
+        <Sidebar seccionActiva={seccionActiva} onCambiarSeccion={setSeccionActiva} />
+
+        <div className="dashboard-contenido">
+          <div className="contenedor">
+            {seccionActiva === 'emergencias' && (
+              <EmergencyView
+                alerts={emergencyAlerts}
+                activeAlerts={activeEmergencies}
+                subscriptionStatus={emergencySubscriptionStatus}
+                acknowledgments={acknowledgments}
+                acknowledgmentError={acknowledgmentError}
+                user={user}
+                connected={status === 'connected'}
+                canResolve={canPublishEmergency(user.role)}
+                onResolve={markEmergencyResolved}
+                onConfirm={handleConfirmRead}
+                onSend={sendEmergency}
+              />
+            )}
+
+            {seccionActiva === 'mensajeria' && (
+              <MessagingView
+                selectedChannelId={selectedChannelId}
+                onSelectChannel={handleSelectChannel}
+                selectedChannel={selectedChannel}
+                receivedMessages={receivedMessages}
+                currentUserId={user.id}
+                connected={status === 'connected'}
+                onSend={sendMessage}
+              />
+            )}
+
+            {seccionActiva === 'personal' && (
+              <PersonnelView
+                users={connectedUsers}
+                currentUserId={user.id}
+                connectionStatus={status}
+              />
+            )}
+
+            {seccionActiva === 'incidentes' && (
+              <IncidentView
+                user={user}
+                connected={status === 'connected'}
+                onSend={sendIncident}
+                reports={incidentReports}
+              />
+            )}
+
+            {seccionActiva === 'soporte' && (
+              <SupportView
+                user={user}
+                connected={status === 'connected'}
+                onSend={sendSupportRequest}
+                requests={supportRequests}
+              />
+            )}
+            <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
           </div>
-
-          <div className={`estado estado--${status}`} role="status" aria-live="polite">
-            <span className="estado-indicador" aria-hidden="true" />
-            <div>
-              <strong>{estado.titulo}</strong>
-              <p>{estado.descripcion}</p>
-            </div>
-          </div>
-
-          <dl className="datos-conexion">
-            <div>
-              <dt>Dirección del broker</dt>
-              <dd>{url}</dd>
-            </div>
-            <div>
-              <dt>Identificador del cliente</dt>
-              <dd>{clientId}</dd>
-            </div>
-            <div>
-              <dt>Protocolo de comunicación</dt>
-              <dd>MQTT sobre WebSocket</dd>
-            </div>
-          </dl>
-
-          {error && status !== 'connected' && (
-            <p className="error-conexion" role="alert">
-              No se pudo establecer la conexión: {error}
-            </p>
-          )}
-        </section>
-
-        <p className="nota">
-          La aplicación administra la conexión y la reconexión de forma automática.
-        </p>
-        <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
+        </div>
       </div>
     </main>
   )
@@ -326,23 +192,17 @@ function App() {
   }
 
   function handleLogout() {
+    if (user?.id) {
+      sessionStorage.removeItem(`mqtt_hu12_alerts_${user.id}`)
 
-  if (user?.id) {
+      sessionStorage.removeItem(`mqtt_hu12_dismissed_${user.id}`)
+    }
 
-    sessionStorage.removeItem(
-      `mqtt_hu12_alerts_${user.id}`
-    )
+    clearUserSession()
+    clearSelectedChannelId()
 
-    sessionStorage.removeItem(
-      `mqtt_hu12_dismissed_${user.id}`
-    )
+    setUser(null)
   }
-
-  clearUserSession()
-  clearSelectedChannelId()
-
-  setUser(null)
-}
 
   if (!user) {
     return <UserIdentification onIdentify={handleIdentify} />
