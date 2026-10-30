@@ -162,6 +162,152 @@
   padding-top: 24px;
 }
 
+/* Panel desplegable del broker MQTT */
+.dashboard-broker {
+  position: relative;
+}
+
+.dashboard-broker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dashboard-broker-trigger:hover {
+  background: #f1f5f9;
+}
+
+.dashboard-broker-trigger:focus-visible {
+  outline: 2px solid #17467d;
+  outline-offset: 2px;
+}
+
+.dashboard-broker-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 1100;
+  width: min(380px, calc(100vw - 32px));
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgb(15 23 42 / 15%);
+  color: #203c58;
+}
+
+.dashboard-broker-panel-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dashboard-broker-panel-cabecera strong {
+  font-size: 15px;
+}
+
+.dashboard-broker-panel-protocolo {
+  padding: 5px 9px;
+  border: 1px solid #d5e4f4;
+  border-radius: 20px;
+  background: #eff6fd;
+  color: #255885;
+  font-size: 11px;
+}
+
+.dashboard-broker-estado {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #f1d5a1;
+  border-radius: 10px;
+  background: #fff8eb;
+}
+
+.dashboard-broker-estado--connected {
+  border-color: #b5e5c9;
+  background: #eefaf3;
+}
+
+.dashboard-broker-estado--disconnected {
+  border-color: #f1c8c8;
+  background: #fff2f2;
+}
+
+.dashboard-broker-estado strong {
+  display: block;
+  font-size: 13px;
+}
+
+.dashboard-broker-estado p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dashboard-broker-datos {
+  margin: 15px 0 0;
+}
+
+.dashboard-broker-datos > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.dashboard-broker-datos dt {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.dashboard-broker-datos dd {
+  max-width: 60%;
+  margin: 0;
+  color: #203c58;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.dashboard-broker-error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff0f0;
+  color: #a12c2c;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-broker-nota {
+  margin: 14px 0 0;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .dashboard-broker-panel {
+    right: auto;
+    left: 0;
+  }
+}
+
 @media (max-width: 760px) {
   .dashboard-header {
     flex-wrap: wrap;

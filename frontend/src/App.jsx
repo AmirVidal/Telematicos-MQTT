@@ -27,6 +27,7 @@ import { canPublishEmergency } from './config/emergencyOptions'
 import { useEmergencyAcknowledgments } from './hooks/useEmergencyAcknowledgments'
 import EmergencyAcknowledgments from './components/EmergencyAcknowledgments'
 import Header from './components/layout/Header'
+import Sidebar from './components/layout/Sidebar'
 
 const estados = {
   connecting: {
@@ -48,6 +49,7 @@ const estados = {
 }
 
 function MqttDashboard({ user, onLogout }) {
+  const [seccionActiva, setSeccionActiva] = useState('mensajeria')
   const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
   const [dismissedEmergencyIds, setDismissedEmergencyIds] = useState(() => {
     try {
@@ -99,7 +101,6 @@ function MqttDashboard({ user, onLogout }) {
     saveSelectedChannelId(user.id, channelId)
     setSelectedChannelId(channelId)
   }
-  const estado = estados[status] ?? estados.disconnected
   useEffect(() => {
     sessionStorage.setItem(`mqtt_hu12_dismissed_${user.id}`, JSON.stringify(dismissedEmergencyIds))
   }, [user.id, dismissedEmergencyIds])
@@ -134,103 +135,100 @@ function MqttDashboard({ user, onLogout }) {
         }}
       />
 
-      <Header user={user} status={status} onLogout={onLogout} />
-      <div className="contenedor">
-        <EmergencyAlerts
-          alerts={emergencyAlerts}
-          activeAlerts={activeEmergencies}
-          connected={status === 'connected'}
-          subscriptionStatus={emergencySubscriptionStatus}
-          canResolve={canPublishEmergency(user.role)}
-          onResolve={markEmergencyResolved}
-        />
-        <EmergencyAcknowledgments
-          activeAlerts={activeEmergencies}
-          acknowledgments={acknowledgments}
-          user={user}
-          connected={status === 'connected'}
-          onConfirm={handleConfirmRead}
-          error={acknowledgmentError}
-        />
+      <Header
+        user={user}
+        status={status}
+        url={url}
+        clientId={clientId}
+        error={error}
+        onLogout={onLogout}
+      />
+      <div className="dashboard-estructura">
+        <Sidebar seccionActiva={seccionActiva} onCambiarSeccion={setSeccionActiva} />
 
-        {canPublishEmergency(user.role) && (
-          <EmergencyAlertForm connected={status === 'connected'} onSend={sendEmergency} />
-        )}
-        <ChannelSelector
-          selectedChannelId={selectedChannelId}
-          onSelectChannel={handleSelectChannel}
-        />
+        <div className="dashboard-contenido">
+          <div className="contenedor">
+            {seccionActiva === 'emergencias' && (
+              <>
+                <EmergencyAlerts
+                  alerts={emergencyAlerts}
+                  activeAlerts={activeEmergencies}
+                  connected={status === 'connected'}
+                  subscriptionStatus={emergencySubscriptionStatus}
+                  canResolve={canPublishEmergency(user.role)}
+                  onResolve={markEmergencyResolved}
+                />
 
-        <MessageComposer
-          channelId={selectedChannelId}
-          channelName={selectedChannel?.name ?? 'Sin seleccionar'}
-          connected={status === 'connected'}
-          onSend={sendMessage}
-        />
+                <EmergencyAcknowledgments
+                  activeAlerts={activeEmergencies}
+                  acknowledgments={acknowledgments}
+                  user={user}
+                  connected={status === 'connected'}
+                  onConfirm={handleConfirmRead}
+                  error={acknowledgmentError}
+                />
 
-        <ConnectedUsers users={connectedUsers} currentUserId={user.id} connectionStatus={status} />
+                {canPublishEmergency(user.role) && (
+                  <EmergencyAlertForm connected={status === 'connected'} onSend={sendEmergency} />
+                )}
+              </>
+            )}
 
-        <ReceivedMessages
-          messages={receivedMessages}
-          currentUserId={user.id}
-          channelName={selectedChannel?.name ?? null}
-        />
+            {seccionActiva === 'mensajeria' && (
+              <>
+                <ChannelSelector
+                  selectedChannelId={selectedChannelId}
+                  onSelectChannel={handleSelectChannel}
+                />
 
-        <IncidentReportForm connected={status === 'connected'} onSend={sendIncident} />
+                <ReceivedMessages
+                  messages={receivedMessages}
+                  currentUserId={user.id}
+                  channelName={selectedChannel?.name ?? null}
+                />
 
-        {(user.role === 'seguridad' || user.role === 'administracion') && (
-          <IncidentReportsList reports={incidentReports} currentUserId={user.id} />
-        )}
+                <MessageComposer
+                  channelId={selectedChannelId}
+                  channelName={selectedChannel?.name ?? 'Sin seleccionar'}
+                  connected={status === 'connected'}
+                  onSend={sendMessage}
+                />
+              </>
+            )}
 
-        <SupportRequestForm connected={status === 'connected'} onSend={sendSupportRequest} />
+            {seccionActiva === 'personal' && (
+              <ConnectedUsers
+                users={connectedUsers}
+                currentUserId={user.id}
+                connectionStatus={status}
+              />
+            )}
 
-        {(user.role === 'mantenimiento' || user.role === 'administracion') && (
-          <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
-        )}
+            {seccionActiva === 'incidentes' && (
+              <>
+                <IncidentReportForm connected={status === 'connected'} onSend={sendIncident} />
 
-        <section className="tarjeta" aria-labelledby="titulo-conexion">
-          <div className="tarjeta-cabecera">
-            <div>
-              <p className="seccion-etiqueta">Conexión en tiempo real</p>
-              <h2 id="titulo-conexion">Estado del broker MQTT</h2>
-            </div>
-            <span className="etiqueta-protocolo">WebSocket</span>
+                {(user.role === 'seguridad' || user.role === 'administracion') && (
+                  <IncidentReportsList reports={incidentReports} currentUserId={user.id} />
+                )}
+              </>
+            )}
+
+            {seccionActiva === 'soporte' && (
+              <>
+                <SupportRequestForm
+                  connected={status === 'connected'}
+                  onSend={sendSupportRequest}
+                />
+
+                {(user.role === 'mantenimiento' || user.role === 'administracion') && (
+                  <SupportRequestsList requests={supportRequests} currentUserId={user.id} />
+                )}
+              </>
+            )}
+            <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
           </div>
-
-          <div className={`estado estado--${status}`} role="status" aria-live="polite">
-            <span className="estado-indicador" aria-hidden="true" />
-            <div>
-              <strong>{estado.titulo}</strong>
-              <p>{estado.descripcion}</p>
-            </div>
-          </div>
-
-          <dl className="datos-conexion">
-            <div>
-              <dt>Dirección del broker</dt>
-              <dd>{url}</dd>
-            </div>
-            <div>
-              <dt>Identificador del cliente</dt>
-              <dd>{clientId}</dd>
-            </div>
-            <div>
-              <dt>Protocolo de comunicación</dt>
-              <dd>MQTT sobre WebSocket</dd>
-            </div>
-          </dl>
-
-          {error && status !== 'connected' && (
-            <p className="error-conexion" role="alert">
-              No se pudo establecer la conexión: {error}
-            </p>
-          )}
-        </section>
-
-        <p className="nota">
-          La aplicación administra la conexión y la reconexión de forma automática.
-        </p>
-        <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
+        </div>
       </div>
     </main>
   )

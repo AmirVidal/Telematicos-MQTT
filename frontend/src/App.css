@@ -582,10 +582,6 @@
 }
 
 @media (max-width: 600px) {
-  .pagina {
-    padding: 30px 14px;
-  }
-
   .cabecera {
     align-items: flex-start;
     gap: 12px;
@@ -768,7 +764,6 @@
   font-size: 14px;
 }
 
-
 /* HU07 - Envío de mensajes MQTT */
 
 .message-composer {
@@ -869,7 +864,6 @@
     flex-direction: column;
   }
 }
-
 
 /* HU11 - Formulario de reportes de incidentes */
 
@@ -1360,7 +1354,6 @@
 /* Adaptacion para celulares */
 
 @media (max-width: 600px) {
-
   .emergency-overlay {
     padding: 12px;
   }
@@ -1577,6 +1570,35 @@
   background: #941a30;
 }
 
+/* Estructura principal del dashboard */
+.dashboard-estructura {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 90px);
+}
+
+.dashboard-contenido {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 24px;
+}
+
+.dashboard-contenido .contenedor {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+@media (max-width: 760px) {
+  .dashboard-estructura {
+    flex-direction: column;
+  }
+
+  .dashboard-contenido {
+    padding: 20px 12px;
+  }
+}
+
 @media (max-width: 600px) {
   .hu13-item {
     padding: 15px;
@@ -1634,14 +1656,12 @@
   color: #b32940;
 }
 
-.emergencias-historial[open]
-.emergencias-historial-indicador {
+.emergencias-historial[open] .emergencias-historial-indicador {
   font-size: 0;
 }
 
-.emergencias-historial[open]
-.emergencias-historial-indicador::after {
-  content: "Ocultar historial";
+.emergencias-historial[open] .emergencias-historial-indicador::after {
+  content: 'Ocultar historial';
   font-size: 12px;
 }
 
