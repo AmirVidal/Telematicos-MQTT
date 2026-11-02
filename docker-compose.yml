@@ -50,6 +50,7 @@ services:
       BUILDING_ID: principal
       PRESENCE_TTL_MS: 90000
       LOG_LEVEL: info
+      HISTORY_API_TOKEN: ${HISTORY_API_TOKEN:?Configura HISTORY_API_TOKEN en el archivo .env}
 
     depends_on:
       mongo:

@@ -12,6 +12,9 @@ import { ROLES } from "./constants.js";
 import { Event } from "./models/Event.js";
 import { EmergencyResponse } from "./models/EmergencyResponse.js";
 import { logger } from "./logger.js";
+import { timingSafeEqual as compareTokens } from 'node:crypto'
+import { queryEmergencyHistory, HistoryError } from './emergencyHistory.js'
+
 
 const MAX_FILES = 3;
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -313,14 +316,53 @@ async function getEvidence(req, res, fileId) {
   stream.pipe(res);
 }
 
+
+function requireHistoryToken(req) {
+  const expected = process.env.HISTORY_API_TOKEN
+
+  if (!expected || expected.length < 32) {
+    throw new HttpError(503, 'La consulta histórica no está configurada.')
+  }
+
+  const authorization = req.headers.authorization || ''
+  const token = authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : ''
+
+  const provided = Buffer.from(token)
+  const configured = Buffer.from(expected)
+
+  if (
+    provided.length !== configured.length ||
+    !compareTokens(provided, configured)
+  ) {
+    throw new HttpError(401, 'No autorizado para consultar el historial.')
+  }
+}
+
 export function startHttpApi(port = config.apiPort) {
   const server = createServer(async (req, res) => {
     try {
-      const path = new URL(req.url, "http://localhost").pathname;
+      
+      const requestUrl = new URL(req.url, 'http://localhost')
+      const path = requestUrl.pathname
       const responseMatch = path.match(
         /^\/api\/emergencias\/([^/]+)\/respuestas(?:\/([^/]+))?$/,
       );
       const evidenceMatch = path.match(/^\/api\/evidencias\/([^/]+)$/);
+
+      
+      if (req.method === 'GET' && path === '/api/emergencies/history') {
+        requireHistoryToken(req)
+
+        const result = await queryEmergencyHistory(
+          requestUrl,
+          config.buildingId
+        )
+
+        json(res, 200, result)
+        return
+      }
       if (req.method === "POST" && responseMatch && !responseMatch[2]) {
         await postResponse(req, res, responseMatch[1]);
       } else if (req.method === "GET" && responseMatch?.[2]) {
@@ -337,7 +379,7 @@ export function startHttpApi(port = config.apiPort) {
         res.destroy();
         return;
       }
-      const status = error instanceof HttpError ? error.status : 500;
+      const status =error instanceof HttpError || error instanceof HistoryError ? error.status : 500;
       if (status === 500)
         logger.error("http api error", { error: error.message });
       json(res, status, {
