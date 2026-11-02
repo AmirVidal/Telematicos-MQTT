@@ -19,6 +19,7 @@ import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import MessagingView from './components/messaging/MessagingView'
 import EmergencyView from './components/emergency/EmergencyView'
+import { clearOwnEmergencyResponses } from './services/emergencyResponseService'
 import IncidentView from './components/incidents/IncidentView'
 import SupportView from './components/support/SupportView'
 import PersonnelView from './components/personnel/PersonnelView'
@@ -125,7 +126,6 @@ function MqttDashboard({ user, onLogout }) {
           <div className="contenedor">
             {seccionActiva === 'emergencias' && (
               <EmergencyView
-                alerts={emergencyAlerts}
                 activeAlerts={activeEmergencies}
                 subscriptionStatus={emergencySubscriptionStatus}
                 acknowledgments={acknowledgments}
@@ -196,6 +196,7 @@ function App() {
       sessionStorage.removeItem(`mqtt_hu12_alerts_${user.id}`)
 
       sessionStorage.removeItem(`mqtt_hu12_dismissed_${user.id}`)
+      clearOwnEmergencyResponses(user.id)
     }
 
     clearUserSession()
