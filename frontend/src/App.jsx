@@ -19,6 +19,7 @@ import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import MessagingView from './components/messaging/MessagingView'
 import EmergencyView from './components/emergency/EmergencyView'
+import EmergencyHistory from './components/emergency/EmergencyHistory'
 import { clearOwnEmergencyResponses } from './services/emergencyResponseService'
 import IncidentView from './components/incidents/IncidentView'
 import SupportView from './components/support/SupportView'
@@ -138,7 +139,9 @@ function MqttDashboard({ user, onLogout }) {
                 onSend={sendEmergency}
               />
             )}
-
+            {seccionActiva === 'historial-emergencias' && (
+              <EmergencyHistory />
+             )}
             {seccionActiva === 'mensajeria' && (
               <MessagingView
                 selectedChannelId={selectedChannelId}
@@ -176,7 +179,8 @@ function MqttDashboard({ user, onLogout }) {
                 requests={supportRequests}
               />
             )}
-            <footer className="pie">Servicios Telemáticos · Grupo 6</footer>
+            <footer className="pie">No hay historial</footer>
+            
           </div>
         </div>
       </div>
