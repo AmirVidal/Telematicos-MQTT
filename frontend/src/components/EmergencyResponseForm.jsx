@@ -14,17 +14,12 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
   const [files, setFiles] = useState([])
   const [ownResponse, setOwnResponse] = useState(null)
   const [sending, setSending] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(Boolean(alert?.id && user?.id))
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
-    setDescription('')
-    setFiles([])
-    setOwnResponse(null)
-    setError('')
     if (!alert?.id || !user?.id) return () => { active = false }
-    setLoading(true)
     loadOwnEmergencyResponse({ emergencyId: alert.id, userId: user.id })
       .then((response) => {
         if (active) setOwnResponse(response)
@@ -54,6 +49,7 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
   async function handleSubmit(event) {
     event.preventDefault()
     if (!alert || sending || !connected) return
+    const formElement = event.currentTarget
     setError('')
     setSending(true)
     try {
@@ -66,7 +62,7 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
       setOwnResponse(response)
       setDescription('')
       setFiles([])
-      const input = event.currentTarget?.querySelector('input[type="file"]')
+      const input = formElement.querySelector('input[type="file"]')
       if (input) input.value = ''
     } catch (failure) {
       setError(failure.message)
