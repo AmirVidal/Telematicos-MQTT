@@ -9,10 +9,12 @@ import { Presence } from "./Presence.js";
 import { Role } from "./Role.js";
 import { SupportRequest } from "./SupportRequest.js";
 import { User } from "./User.js";
+import { Emergency } from './Emergency.js'
 
 export {
   Building,
   Channel,
+  Emergency,
   Event,
   EmergencyResponse,
   Incident,
