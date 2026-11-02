@@ -14,7 +14,7 @@ import { EmergencyResponse } from "./models/EmergencyResponse.js";
 import { logger } from "./logger.js";
 import { timingSafeEqual as compareTokens } from 'node:crypto'
 import { queryEmergencyHistory, HistoryError } from './emergencyHistory.js'
-
+import { exportEmergencyCsv } from './emergencyCsv.js'
 
 const MAX_FILES = 3;
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -351,6 +351,22 @@ export function startHttpApi(port = config.apiPort) {
       );
       const evidenceMatch = path.match(/^\/api\/evidencias\/([^/]+)$/);
 
+       
+      if (req.method === 'GET' && path === '/api/emergencies/history/export') {
+        requireHistoryToken(req)
+
+        const csv = await exportEmergencyCsv(requestUrl, config.buildingId)
+
+        res.writeHead(200, {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': 'attachment; filename="historial-emergencias.csv"',
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff'
+        })
+
+        res.end(csv)
+        return
+      }
       
       if (req.method === 'GET' && path === '/api/emergencies/history') {
         requireHistoryToken(req)

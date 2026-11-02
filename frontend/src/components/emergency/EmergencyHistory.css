@@ -190,3 +190,10 @@
     gap: 5px;
   }
 }
+
+.history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

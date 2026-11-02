@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import { EMERGENCY_TYPES, getEmergencyTypeLabel } from '../../config/emergencyOptions'
-import { getEmergencyHistory } from '../../services/emergencyHistoryService'
+import { getEmergencyHistory,exportEmergencyHistory} from '../../services/emergencyHistoryService'
 import './EmergencyHistory.css'
 
 const EMPTY_FILTERS = {
@@ -28,7 +28,6 @@ function formatDate(value) {
 }
 
 export default function EmergencyHistory() {
-  console.log('HU15: EmergencyHistory se está renderizando')
   const [filters, setFilters] = useState({ ...EMPTY_FILTERS })
   const [appliedFilters, setAppliedFilters] = useState({ ...EMPTY_FILTERS })
   const [page, setPage] = useState(1)
@@ -38,6 +37,7 @@ export default function EmergencyHistory() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -64,10 +64,25 @@ export default function EmergencyHistory() {
       }
     }
 
+   
     load()
 
     return () => controller.abort()
   }, [appliedFilters, page, revision])
+
+  async function handleExport() {
+    setExporting(true)
+    setError('')
+
+    try {
+      await exportEmergencyHistory(appliedFilters)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setExporting(false)
+    }
+  }
+
 
   function updateFilter(key, value) {
     setFilters((previous) => ({ ...previous, [key]: value }))
@@ -95,18 +110,30 @@ export default function EmergencyHistory() {
 
   return (
     <section className="history-view" aria-label="Historial de emergencias">
+      
       <header className="history-header">
         <div>
           <h2>Historial de emergencias</h2>
           <p>Consulta los registros históricos guardados en el sistema.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setRevision((previous) => previous + 1)}
-          disabled={loading}
-        >
-          Actualizar
-        </button>
+
+        <div className="history-header-actions">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={loading || exporting || Boolean(error)}
+          >
+            {exporting ? 'Exportando...' : 'Exportar CSV'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRevision((previous) => previous + 1)}
+            disabled={loading}
+          >
+            Actualizar
+          </button>
+        </div>
       </header>
 
       <form className="history-filters" onSubmit={applyFilters}>
