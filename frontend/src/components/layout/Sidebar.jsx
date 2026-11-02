@@ -3,6 +3,7 @@ import './Sidebar.css'
 const opciones = [
   { id: 'mensajeria', nombre: 'Mensajería', icono: '✉' },
   { id: 'emergencias', nombre: 'Emergencias', icono: '⚠' },
+  { id: 'historial-emergencias', nombre: 'Historial de emergencias', icono: '▣' },
   { id: 'incidentes', nombre: 'Incidentes', icono: '▤' },
   { id: 'soporte', nombre: 'Soporte', icono: '⚒' },
   { id: 'personal', nombre: 'Personal', icono: '♙' }

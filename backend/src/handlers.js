@@ -14,6 +14,7 @@ import { Message } from './models/Message.js'
 import { Presence } from './models/Presence.js'
 import { SupportRequest } from './models/SupportRequest.js'
 import { User } from './models/User.js'
+import {saveEmergency,resolveStoredEmergency} from './emergencyPersistence.js'
 
 function stringField(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : null
@@ -379,6 +380,48 @@ export async function handleMessage(topic, rawPayload) {
     }
 
     const isEmpty = !rawPayload || rawPayload.length === 0 || !rawPayload.toString('utf8').trim()
+
+    
+    if (
+      category === 'alertas' &&
+      parts[3] === 'emergencias'
+    ) {
+      if (parts.length === 4 && !isEmpty) {
+        const payload = parsePayload(rawPayload)
+
+        await storeEvent({
+          buildingId,
+          category,
+          payload,
+          topic
+        })
+
+        await saveEmergency(buildingId, payload)
+        return
+      }
+
+      if (
+        parts[4] === 'activas' &&
+        parts.length === 6
+      ) {
+        const emergencyId = parts[5]
+
+        if (isEmpty) {
+          await resolveStoredEmergency(
+            buildingId,
+            emergencyId
+          )
+          return
+        }
+
+        const payload = parsePayload(rawPayload)
+
+        if (payload?.id !== emergencyId) return
+
+        await saveEmergency(buildingId, payload)
+        return
+      }
+    }
 
     if (category === 'mensajeria') {
       if (isEmpty) return
