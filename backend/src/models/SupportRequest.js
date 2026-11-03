@@ -15,6 +15,11 @@ const supportRequestSchema = new mongoose.Schema(
       maxlength: MAX_SUPPORT_DESCRIPTION_LENGTH
     },
     status: { type: String, required: true, enum: SUPPORT_STATUSES, default: 'pendiente' },
+    responderId: { type: String, default: null },
+    responderName: { type: String, default: null, trim: true },
+    responderRole: { type: String, default: '', enum: [...ROLES, ''] },
+    respondedAt: { type: Date, default: null },
+    resolvedAt: { type: Date, default: null },
     topic: { type: String, required: true },
     timestamp: { type: Date, required: true },
     receivedAt: { type: Date, required: true, default: Date.now }
@@ -25,5 +30,6 @@ const supportRequestSchema = new mongoose.Schema(
 supportRequestSchema.index({ requestId: 1 }, { unique: true })
 supportRequestSchema.index({ buildingId: 1, status: 1, timestamp: -1 })
 supportRequestSchema.index({ requesterId: 1, timestamp: -1 })
+supportRequestSchema.index({ responderId: 1, status: 1, respondedAt: -1 })
 
 export const SupportRequest = mongoose.model('SupportRequest', supportRequestSchema)
