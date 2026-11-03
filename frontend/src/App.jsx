@@ -71,7 +71,10 @@ function MqttDashboard({ user, onLogout }) {
   }
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
   const { sendIncident } = useIncidentReport(clientRef, user)
-  const { sendEmergency, markEmergencyResolved } = useEmergencyAlert(clientRef, user)
+  const {
+        sendEmergency,
+        markEmergencyResolved,
+      } = useEmergencyAlert(clientRef, user)
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {

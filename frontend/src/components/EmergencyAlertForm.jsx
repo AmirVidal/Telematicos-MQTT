@@ -4,7 +4,8 @@ import {
   EMERGENCY_TYPES,
   MAX_EMERGENCY_DESCRIPTION_LENGTH,
   MAX_EMERGENCY_LOCATION_LENGTH,
-  getEmergencyTypeLabel
+  getEmergencyTypeLabel,
+  ASSIGNABLE_EMERGENCY_ROLES
 } from '../config/emergencyOptions'
 
 import { validateEmergency } from '../services/emergencyPublisher'
@@ -14,6 +15,7 @@ export default function EmergencyAlertForm({ connected, onSend }) {
   const [type, setType] = useState('')
   const [location, setLocation] = useState('')
   const [description, setDescription] = useState('')
+  const [assignedRole, setAssignedRole] = useState('')
 
   const [confirmation, setConfirmation] = useState(null)
   const [sending, setSending] = useState(false)
@@ -52,10 +54,11 @@ export default function EmergencyAlertForm({ connected, onSend }) {
       }
 
       const validated = validateEmergency({
-        type,
-        location,
-        description
-      })
+          type,
+          location,
+          description,
+          assignedRole
+        })
 
       setConfirmation(validated)
 
@@ -80,7 +83,7 @@ export default function EmergencyAlertForm({ connected, onSend }) {
       setLocation('')
       setDescription('')
       setConfirmation(null)
-
+      setAssignedRole('')
       setFeedback({
         type: 'success',
         message:
@@ -152,7 +155,27 @@ export default function EmergencyAlertForm({ connected, onSend }) {
         <label htmlFor="emergency-location">
           Ubicación o zona
         </label>
+          <label htmlFor="emergency-assigned-role">
+  Rol responsable de atender la emergencia
+</label>
 
+<select
+  id="emergency-assigned-role"
+  value={assignedRole}
+  onChange={(event) => setAssignedRole(event.target.value)}
+  disabled={sending}
+  required
+>
+  <option value="">
+    Selecciona un rol responsable
+  </option>
+
+  {ASSIGNABLE_EMERGENCY_ROLES.map((role) => (
+    <option key={role.value} value={role.value}>
+      {role.label}
+    </option>
+  ))}
+</select>
         <input
           id="emergency-location"
           type="text"
@@ -242,7 +265,14 @@ export default function EmergencyAlertForm({ connected, onSend }) {
               Se publicará una alerta prioritaria para
               el personal conectado.
             </p>
-
+            <div>
+              <dt>Rol responsable</dt>
+              <dd>
+                {ASSIGNABLE_EMERGENCY_ROLES.find(
+                  (role) => role.value === confirmation.assignedRole
+                )?.label}
+              </dd>
+            </div>
             <dl className="emergencia-resumen">
 
               <div>

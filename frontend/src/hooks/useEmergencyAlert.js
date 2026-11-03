@@ -5,7 +5,6 @@ import {
   resolveEmergency
 } from '../services/emergencyPublisher'
 
-
 export function useEmergencyAlert(clientRef, user) {
 
   const sendEmergency = useCallback(
@@ -18,7 +17,6 @@ export function useEmergencyAlert(clientRef, user) {
     [clientRef, user]
   )
 
-
   const markEmergencyResolved = useCallback(
     (alertId) =>
       resolveEmergency({
@@ -28,7 +26,6 @@ export function useEmergencyAlert(clientRef, user) {
       }),
     [clientRef, user]
   )
-
 
   return {
     sendEmergency,

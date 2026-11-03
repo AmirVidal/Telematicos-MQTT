@@ -5,7 +5,8 @@ import {
   EMERGENCY_TYPES,
   MAX_EMERGENCY_DESCRIPTION_LENGTH,
   MAX_EMERGENCY_LOCATION_LENGTH,
-  canPublishEmergency
+  canPublishEmergency,
+  ASSIGNABLE_EMERGENCY_ROLES
 } from '../config/emergencyOptions'
 
 export function parseEmergency(topic, payload) {
@@ -71,6 +72,23 @@ if (topic !== generalTopic && !isActiveTopic) {
   ) {
     throw new Error('Los datos de la alerta no son válidos.')
   }
+  if (message.assignedRole != null) {
+  const validRole = ASSIGNABLE_EMERGENCY_ROLES.some(
+    (role) => role.value === message.assignedRole
+  )
+
+  const validAssigner = canPublishEmergency(
+    message.assignedByRole
+  )
+
+  const validDate = Number.isFinite(
+    Date.parse(message.assignedAt)
+  )
+
+  if (!validRole || !validAssigner || !validDate) {
+    throw new Error('La asignación de la emergencia no es válida.')
+  }
+}
 if (
   isActiveTopic &&
   topic !== `${activePrefix}${message.id}`
@@ -79,6 +97,19 @@ if (
     'El identificador de la alerta no coincide con el topic retenido.'
   )
 }
+
+    if (
+      !message.emergencyType ||
+      !message.location?.trim() ||
+      !message.description?.trim() ||
+      !message.senderName?.trim() ||
+      !message.timestamp ||
+      !Number.isFinite(Date.parse(message.timestamp))
+    ) {
+      throw new Error(
+        'Emergencia incompleta descartada.'
+      )
+    }
   return {
     id: message.id,
     emergencyType: message.emergencyType,
@@ -91,6 +122,11 @@ if (
     senderRole: message.senderRole,
 
     timestamp: message.timestamp,
+    assignedRole: message.assignedRole ?? null,
+    assignedAt: message.assignedAt ?? null,
+    assignedById: message.assignedById ?? null,
+    assignedByName: message.assignedByName ?? null,
+    assignedByRole: message.assignedByRole ?? null,
     topic
   }
 }

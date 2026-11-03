@@ -67,6 +67,12 @@ export default function EmergencyAlerts({
                 <p><strong>Ubicación:</strong> {alert.location}</p>
                 <p>{alert.description}</p>
                 <p className="emergencia-emisor">Emitida por {alert.senderName} ({alert.senderRole})</p>
+                <p>
+                  <strong>Rol responsable:</strong>{' '}
+                  {alert.assignedRole
+                    ? alert.assignedRole
+                    : 'Pendiente de asignación'}
+                </p>
                 <div className="hu14-alert-actions">
                   <button type="button" className="hu14-select" onClick={() => onSelect(alert.id)}>
                     {selectedEmergencyId === alert.id ? 'Seleccionada para responder' : 'Responder emergencia'}

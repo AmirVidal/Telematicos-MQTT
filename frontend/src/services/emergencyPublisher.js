@@ -5,14 +5,16 @@ import {
   EMERGENCY_TYPES,
   MAX_EMERGENCY_DESCRIPTION_LENGTH,
   MAX_EMERGENCY_LOCATION_LENGTH,
-  canPublishEmergency
+  canPublishEmergency,
+  ASSIGNABLE_EMERGENCY_ROLES
 } from '../config/emergencyOptions'
 
 
 export function validateEmergency({
   type,
   location,
-  description
+  description,
+  assignedRole
 } = {}) {
 
   if (!EMERGENCY_TYPES.some((item) => item.id === type)) {
@@ -39,10 +41,22 @@ export function validateEmergency({
     )
   }
 
+  // NUEVO: el rol responsable es obligatorio.
+  const validRole = ASSIGNABLE_EMERGENCY_ROLES.some(
+    (role) => role.value === assignedRole
+  )
+
+  if (!validRole) {
+    throw new Error(
+      'Debes seleccionar el rol responsable de atender la emergencia.'
+    )
+  }
+
   return {
     type,
     location: location.trim(),
-    description: description.trim()
+    description: description.trim(),
+    assignedRole
   }
 }
 
@@ -120,21 +134,30 @@ export async function publishEmergency({
 
   const valid = validateEmergency(emergency)
 
-  const payload = {
-    id: crypto.randomUUID(),
+  const timestamp = new Date().toISOString()
 
-    type: 'emergencia',
+const payload = {
+  id: crypto.randomUUID(),
 
-    emergencyType: valid.type,
-    location: valid.location,
-    description: valid.description,
+  type: 'emergencia',
 
-    senderId: user.id,
-    senderName: user.name,
-    senderRole: user.role,
+  emergencyType: valid.type,
+  location: valid.location,
+  description: valid.description,
 
-    timestamp: new Date().toISOString()
-  }
+  senderId: user.id,
+  senderName: user.name,
+  senderRole: user.role,
+
+  // NUEVO: responsable definido desde la creación.
+  assignedRole: valid.assignedRole,
+  assignedAt: timestamp,
+  assignedById: user.id,
+  assignedByName: user.name,
+  assignedByRole: user.role,
+
+  timestamp
+}
 
   // Guardar la emergencia como activa en el broker.
 
@@ -207,4 +230,62 @@ export async function resolveEmergency({
   )
 
   return alertId
+}
+export async function assignEmergencyRole({
+  client,
+  user,
+  alert,
+  assignedRole
+}) {
+  // Solo Seguridad y Administración pueden asignar.
+  validatePublisher(client, user)
+
+  if (!alert || typeof alert.id !== 'string') {
+    throw new Error('Selecciona una emergencia válida.')
+  }
+
+  const isValidRole = ASSIGNABLE_EMERGENCY_ROLES.some(
+    (role) => role.value === assignedRole
+  )
+
+  if (!isValidRole) {
+    throw new Error('Selecciona un rol responsable válido.')
+  }
+
+  const updatedAlert = {
+    id: alert.id,
+    type: 'emergencia',
+
+    emergencyType: alert.emergencyType,
+    location: alert.location,
+    description: alert.description,
+
+    // Se conserva el emisor original.
+    senderId: alert.senderId,
+    senderName: alert.senderName,
+    senderRole: alert.senderRole,
+    timestamp: alert.timestamp,
+
+    // Nueva información de asignación.
+    assignedRole,
+    assignedAt: new Date().toISOString(),
+    assignedById: user.id,
+    assignedByName: user.name,
+    assignedByRole: user.role
+  }
+
+  const topic = topics.alertas.emergenciaActiva(
+    BUILDING_ID,
+    alert.id
+  )
+
+  // Actualiza el estado retenido de esta emergencia.
+  await publishAcknowledged(
+    client,
+    topic,
+    JSON.stringify(updatedAlert),
+    true
+  )
+
+  return updatedAlert
 }

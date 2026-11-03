@@ -31,3 +31,10 @@ export function getEmergencyTypeLabel(id) {
     'Emergencia'
   )
 }
+export const ASSIGNABLE_EMERGENCY_ROLES = [
+  { value: USER_ROLES.SEGURIDAD, label: 'Seguridad' },
+  { value: USER_ROLES.MANTENIMIENTO, label: 'Mantenimiento' },
+  { value: USER_ROLES.RECEPCION, label: 'Recepción' },
+  { value: USER_ROLES.LIMPIEZA, label: 'Limpieza' },
+  { value: USER_ROLES.ADMINISTRACION, label: 'Administración' }
+]

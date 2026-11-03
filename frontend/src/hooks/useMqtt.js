@@ -458,19 +458,21 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
         // QUE LA EMERGENCIA FUE RESUELTA
 
         if (payload.length === 0) {
-          setActiveEmergencies((previous) =>
-            previous.filter((item) => item.id !== alertId)
-          )
-
-          setEmergencyAlerts((previous) =>
-            previous.map((item) =>
-              item.id === alertId
-                ? { ...item, resolved: true }
-                : item
+          setActiveEmergencies((previous) => {
+            const exists = previous.some(
+              (item) => item.id === alert.id
             )
-          )
 
-          return
+            if (exists) {
+              return previous.map((item) =>
+                item.id === alert.id
+                  ? { ...item, ...alert }
+                  : item
+              )
+            }
+
+            return [alert, ...previous].slice(0, 100)
+          })
         }
 
         // RECUPERAR EMERGENCIAS ACTIVAS
@@ -500,11 +502,15 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
               (item) => item.id === alert.id
             )
 
-            if (exists) {
-              return previous
-            }
+              if (exists) {
+                return previous.map((item) =>
+                  item.id === alert.id
+                    ? { ...item, ...alert }
+                    : item
+                )
+              }
 
-            return [alert, ...previous].slice(0, 100)
+              return [alert, ...previous].slice(0, 100)
           })
         } catch (receiveError) {
           console.warn(

@@ -16,7 +16,10 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(Boolean(alert?.id && user?.id))
   const [error, setError] = useState('')
-
+  const canRespond = Boolean(
+      alert?.assignedRole &&
+      user?.role === alert.assignedRole
+    )
   useEffect(() => {
     let active = true
     if (!alert?.id || !user?.id) return () => { active = false }
@@ -48,7 +51,7 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (!alert || sending || !connected) return
+    if (!alert || sending || !connected || !canRespond) return
     const formElement = event.currentTarget
     setError('')
     setSending(true)
@@ -84,7 +87,7 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
     <section className="tarjeta hu14-panel" aria-labelledby="hu14-title">
       <div className="tarjeta-cabecera">
         <div>
-          <p className="seccion-etiqueta">HU14 · Gestión de atención</p>
+          <p className="seccion-etiqueta">Gestión de atención</p>
           <h2 id="hu14-title">Responder emergencia</h2>
         </div>
       </div>
@@ -99,7 +102,18 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
             <p>{alert.description}</p>
             <small>Reportada por {alert.senderName} ({alert.senderRole})</small>
           </div>
-
+            {!alert.assignedRole ? (
+              <p className="hu14-empty">
+                Esta emergencia todavía no tiene un rol responsable asignado.
+                Espera a que Seguridad o Administración realice la asignación.
+              </p>
+            ) : !canRespond ? (
+              <p className="hu14-empty">
+                Esta emergencia está asignada al área de{' '}
+                <strong>{alert.assignedRole}</strong>.
+                Tu rol no tiene permiso para registrar su atención.
+              </p>
+            ) : (
           <form className="hu14-form" onSubmit={handleSubmit}>
             <label htmlFor="hu14-description">Descripción de la atención realizada</label>
             <textarea
@@ -132,6 +146,7 @@ export default function EmergencyResponseForm({ alert, user, connected }) {
               {sending ? 'Enviando respuesta...' : 'Enviar respuesta con evidencia'}
             </button>
           </form>
+          )}
 
           {error && <p className="hu14-error" role="alert">{error}</p>}
           {loading && <p className="hu14-empty">Cargando tu respuesta guardada...</p>}

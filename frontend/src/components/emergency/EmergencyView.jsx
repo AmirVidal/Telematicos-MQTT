@@ -15,7 +15,8 @@ export default function EmergencyView({
   canResolve,
   onResolve,
   onConfirm,
-  onSend
+  onSend,
+  onAssignRole
 }) {
   const [selectedEmergencyId, setSelectedEmergencyId] = useState(null)
   const selectedAlert = activeAlerts.find((item) => item.id === selectedEmergencyId) ?? activeAlerts[0] ?? null

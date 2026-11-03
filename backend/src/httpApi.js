@@ -18,6 +18,7 @@ import { logger } from "./logger.js";
 import { timingSafeEqual as compareTokens } from 'node:crypto'
 import { queryEmergencyHistory, HistoryError } from './emergencyHistory.js'
 import { exportEmergencyCsv } from './emergencyCsv.js'
+import { Emergency } from './models/Emergency.js'
 
 const MAX_FILES = 3;
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -246,6 +247,40 @@ async function postResponse(req, res, emergencyId) {
   );
   if (!ROLES.includes(responderRole))
     throw new HttpError(400, "El rol no es válido.");
+      const storedEmergency = await Emergency.findOne({
+      emergencyId,
+      buildingId: config.buildingId
+    })
+      .select('assignedRole status')
+      .lean()
+
+    if (!storedEmergency) {
+      throw new HttpError(
+        404,
+        'No se encontró la emergencia.'
+      )
+    }
+
+    if (storedEmergency.status === 'resuelta') {
+      throw new HttpError(
+        409,
+        'La emergencia ya fue resuelta.'
+      )
+    }
+
+    if (!storedEmergency.assignedRole) {
+      throw new HttpError(
+        409,
+        'La emergencia todavía no tiene un rol responsable.'
+      )
+    }
+
+    if (storedEmergency.assignedRole !== responderRole) {
+      throw new HttpError(
+        403,
+        'Tu rol no está asignado para atender esta emergencia.'
+      )
+    }
   const evidenceFiles = form.getAll("evidence");
   if (
     evidenceFiles.length < 1 ||
