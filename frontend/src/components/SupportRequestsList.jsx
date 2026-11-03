@@ -16,9 +16,37 @@ function formatTimestamp(timestamp) {
   }
 }
 
+function normalizeName(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : ''
+}
+
+function samePerson(user, request, prefix) {
+  if (!user) return false
+
+  const id = request[`${prefix}Id`]
+  const name = normalizeName(request[`${prefix}Name`])
+  const role = request[`${prefix}Role`] ?? ''
+
+  return Boolean(
+    (user.id && id && user.id === id) ||
+      (name && name === normalizeName(user.name) && role === user.role)
+  )
+}
+
+const STATUS_LABELS = {
+  pendiente: 'Pendiente',
+  en_proceso: 'En proceso'
+}
+
 export default function SupportRequestsList({
   requests = [],
-  currentUserId = null
+  currentUser = null,
+  canRespond = false,
+  canResolve = false,
+  onRespond,
+  onOpenChat,
+  onResolve,
+  busyRequestId = null
 }) {
   const sortedRequests = useMemo(() => {
     if (!Array.isArray(requests)) {
@@ -48,24 +76,31 @@ export default function SupportRequestsList({
       <div className="tarjeta-cabecera">
         <div>
           <p className="seccion-etiqueta">SOLICITUDES DE SOPORTE</p>
-          <h2>Solicitudes recibidas</h2>
+          <h2>Solicitudes activas</h2>
         </div>
         <span className="etiqueta-protocolo">comandos/soporte</span>
       </div>
 
       {sortedRequests.length === 0 ? (
         <p className="soporte-lista-vacia">
-          Aún no se han recibido solicitudes de soporte.
+          No hay solicitudes de soporte pendientes.
         </p>
       ) : (
         <ul className="lista-soporte">
           {sortedRequests.map((request) => {
-            const isOwnRequest =
-              currentUserId && request.requesterId === currentUserId
+            const requestId = request.requestId || request.id
+            const isOwnRequest = samePerson(currentUser, request, 'requester')
+            const isAssignedResponder = samePerson(currentUser, request, 'responder')
+            const isParticipant = isOwnRequest || isAssignedResponder
+            const isBusy = busyRequestId === requestId
+            const status = request.status || 'pendiente'
+            const statusLabel = STATUS_LABELS[status] || status
+            const assignedToOther =
+              request.responderName && !isAssignedResponder
 
             return (
               <li
-                key={request.id}
+                key={requestId}
                 className={`solicitud-item ${isOwnRequest ? 'solicitud-item--propio' : ''}`}
               >
                 <div className="solicitud-cabecera">
@@ -84,7 +119,58 @@ export default function SupportRequestsList({
                     {formatTimestamp(request.timestamp)}
                   </time>
                 </div>
+
                 <p className="solicitud-descripcion">{request.description}</p>
+
+                <div className="solicitud-meta">
+                  <span className={`solicitud-estado solicitud-estado--${status}`}>
+                    {statusLabel}
+                  </span>
+                  {request.responderName ? (
+                    <span className="solicitud-responsable">
+                      Atendida por {request.responderName}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="solicitud-acciones">
+                  {canRespond && !request.responderName ? (
+                    <button
+                      type="button"
+                      className="soporte-boton soporte-boton--secundario"
+                      onClick={() => onRespond?.(request)}
+                      disabled={isBusy}
+                    >
+                      {isBusy ? 'Iniciando...' : 'Responder'}
+                    </button>
+                  ) : null}
+
+                  {request.responderName && isParticipant ? (
+                    <button
+                      type="button"
+                      className="soporte-boton"
+                      onClick={() => onOpenChat?.(requestId)}
+                    >
+                      Abrir chat
+                    </button>
+                  ) : null}
+
+                  {canResolve && !assignedToOther ? (
+                    <button
+                      type="button"
+                      className="soporte-boton soporte-boton--exito"
+                      onClick={() => onResolve?.(request)}
+                    >
+                      Marcar como resuelto
+                    </button>
+                  ) : null}
+                </div>
+
+                {assignedToOther ? (
+                  <p className="solicitud-nota">
+                    Esta solicitud ya fue tomada por otro usuario de mantenimiento.
+                  </p>
+                ) : null}
               </li>
             )
           })}

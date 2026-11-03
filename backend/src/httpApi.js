@@ -11,6 +11,9 @@ import { config } from "./config.js";
 import { ROLES } from "./constants.js";
 import { Event } from "./models/Event.js";
 import { EmergencyResponse } from "./models/EmergencyResponse.js";
+import { SupportRequest } from "./models/SupportRequest.js";
+import { SupportMessage } from "./models/SupportMessage.js";
+import { SupportResolution } from "./models/SupportResolution.js";
 import { logger } from "./logger.js";
 import { timingSafeEqual as compareTokens } from 'node:crypto'
 import { queryEmergencyHistory, HistoryError } from './emergencyHistory.js'
@@ -26,6 +29,11 @@ const FILE_TYPES = new Set([
   "image/webp",
   "application/pdf",
 ]);
+const SUPPORT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const SUPPORT_ACTIVE_STATUSES = ["pendiente", "en_proceso"];
+const SUPPORT_EVIDENCE_BUCKET = "support_evidence";
+const MAX_SUPPORT_TEXT = 1000;
+const MAX_JSON_BYTES = 64 * 1024;
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -148,20 +156,24 @@ function publicResponse(response) {
   };
 }
 
-async function uploadEvidence(files) {
+async function uploadEvidence(
+  files,
+  {
+    bucketName = "emergency_evidence",
+    allowedTypes = FILE_TYPES,
+    invalidMessage = "Solo se admiten archivos JPG, PNG, WebP o PDF válidos.",
+  } = {},
+) {
   const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-    bucketName: "emergency_evidence",
+    bucketName,
   });
   const saved = [];
   try {
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const mimeType = detectMime(buffer);
-      if (!mimeType || mimeType !== file.type || !FILE_TYPES.has(mimeType)) {
-        throw new HttpError(
-          415,
-          "Solo se admiten archivos JPG, PNG, WebP o PDF válidos.",
-        );
+      if (!mimeType || mimeType !== file.type || !allowedTypes.has(mimeType)) {
+        throw new HttpError(415, invalidMessage);
       }
       if (!buffer.length || buffer.length > MAX_FILE_BYTES) {
         throw new HttpError(
@@ -317,6 +329,412 @@ async function getEvidence(req, res, fileId) {
 }
 
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function readJsonBody(req) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of req) {
+    total += chunk.length;
+    if (total > MAX_JSON_BYTES)
+      throw new HttpError(413, "El cuerpo de la solicitud es demasiado grande.");
+    chunks.push(chunk);
+  }
+  const raw = Buffer.concat(chunks).toString("utf8").trim();
+  if (!raw) throw new HttpError(400, "El cuerpo de la solicitud está vacío.");
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new HttpError(400, "El cuerpo debe ser un objeto JSON válido.");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+    throw new HttpError(400, "El cuerpo debe ser un objeto JSON válido.");
+  return parsed;
+}
+
+function normalizeSupportName(value) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function supportIdentityFromPayload(payload, idKey, nameKey, roleKey) {
+  const userId = payload?.[idKey] ?? payload?.userId;
+  const name = payload?.[nameKey] ?? payload?.name;
+  const role = payload?.[roleKey] ?? payload?.role;
+  requireId(userId, "Identificador de usuario");
+  const normalizedName = safeText(name, 50, "El nombre del usuario");
+  if (normalizedName.length < 3)
+    throw new HttpError(400, "El nombre del usuario no es válido.");
+  if (typeof role !== "string" || !ROLES.includes(role))
+    throw new HttpError(400, "El rol del usuario no es válido.");
+  return { userId, name: normalizedName, role };
+}
+
+function supportIdentityFromQuery(url) {
+  const params = url.searchParams;
+  return supportIdentityFromPayload(
+    {
+      userId: params.get("userId"),
+      name: params.get("name"),
+      role: params.get("role"),
+    },
+    "userId",
+    "name",
+    "role",
+  );
+}
+
+function samePerson(identity, document, prefix) {
+  const id = document[`${prefix}Id`];
+  const name = normalizeSupportName(document[`${prefix}Name`]);
+  const role = document[`${prefix}Role`] ?? "";
+  return Boolean(
+    (identity.userId && id && identity.userId === id) ||
+      (name &&
+        name === normalizeSupportName(identity.name) &&
+        role === identity.role),
+  );
+}
+
+function isSupportParticipant(document, identity) {
+  return (
+    samePerson(identity, document, "requester") ||
+    samePerson(identity, document, "responder")
+  );
+}
+
+function identityClauses(prefix, identity) {
+  return [
+    { [`${prefix}Id`]: identity.userId },
+    {
+      [`${prefix}Name`]: {
+        $regex: `^${escapeRegex(identity.name)}$`,
+        $options: "i",
+      },
+      [`${prefix}Role`]: identity.role,
+    },
+  ];
+}
+
+function publicSupportRequest(document) {
+  return {
+    id: document.requestId,
+    requestId: document.requestId,
+    buildingId: document.buildingId,
+    requesterId: document.requesterId ?? null,
+    requesterName: document.requesterName,
+    requesterRole: document.requesterRole ?? "",
+    description: document.description,
+    status: document.status,
+    responderId: document.responderId ?? null,
+    responderName: document.responderName ?? null,
+    responderRole: document.responderRole ?? "",
+    respondedAt: document.respondedAt ?? null,
+    resolvedAt: document.resolvedAt ?? null,
+    timestamp: document.timestamp,
+    receivedAt: document.receivedAt,
+  };
+}
+
+function publicSupportMessage(document) {
+  return {
+    id: document.messageId,
+    messageId: document.messageId,
+    requestId: document.requestId,
+    senderId: document.senderId,
+    senderName: document.senderName,
+    senderRole: document.senderRole,
+    content: document.content,
+    timestamp: document.timestamp,
+    createdAt: document.createdAt,
+  };
+}
+
+function publicSupportResolution(document) {
+  return {
+    resolutionId: document.resolutionId,
+    requestId: document.requestId,
+    buildingId: document.buildingId,
+    responderId: document.responderId,
+    responderName: document.responderName,
+    responderRole: document.responderRole,
+    requesterId: document.requesterId ?? null,
+    requesterName: document.requesterName,
+    requesterRole: document.requesterRole ?? "",
+    requestDescription: document.requestDescription,
+    requestCreatedAt: document.requestCreatedAt,
+    problem: document.problem,
+    resolution: document.resolution,
+    evidence: (document.evidence ?? []).map((item) => ({
+      id: item.fileId.toString(),
+      filename: item.filename,
+      mimeType: item.mimeType,
+      size: item.size,
+    })),
+    resolvedAt: document.resolvedAt,
+  };
+}
+
+async function getSupportRequests(req, res, url) {
+  const identity = supportIdentityFromQuery(url);
+  const canSeeAll = ["mantenimiento", "administracion"].includes(identity.role);
+  const filter = canSeeAll
+    ? { status: { $in: SUPPORT_ACTIVE_STATUSES } }
+    : {
+        status: { $in: SUPPORT_ACTIVE_STATUSES },
+        $or: identityClauses("requester", identity),
+      };
+  const documents = await SupportRequest.find(filter)
+    .sort({ timestamp: -1 })
+    .limit(300)
+    .lean();
+  json(res, 200, { requests: documents.map(publicSupportRequest) });
+}
+
+async function respondSupportRequest(req, res, requestId) {
+  requireId(requestId, "Identificador de solicitud");
+  const body = await readJsonBody(req);
+  const identity = supportIdentityFromPayload(
+    body,
+    "responderId",
+    "responderName",
+    "responderRole",
+  );
+  if (identity.role !== "mantenimiento")
+    throw new HttpError(
+      403,
+      "Solo el personal de mantenimiento puede responder solicitudes de soporte.",
+    );
+  const request = await SupportRequest.findOne({ requestId });
+  if (!request) throw new HttpError(404, "Solicitud de soporte no encontrada.");
+  if (request.status === "resuelta")
+    throw new HttpError(409, "La solicitud de soporte ya fue resuelta.");
+  if (request.responderName && !samePerson(identity, request, "responder"))
+    throw new HttpError(
+      409,
+      `La solicitud ya fue tomada por ${request.responderName}.`,
+    );
+  if (!request.responderName) {
+    request.responderId = identity.userId;
+    request.responderName = identity.name;
+    request.responderRole = identity.role;
+    request.status = "en_proceso";
+    request.respondedAt = new Date();
+    await request.save();
+  }
+  json(res, 200, { request: publicSupportRequest(request) });
+}
+
+async function getSupportChats(req, res, url) {
+  const identity = supportIdentityFromQuery(url);
+  const documents = await SupportRequest.find({
+    responderName: { $exists: true, $ne: null },
+    $or: [
+      ...identityClauses("requester", identity),
+      ...identityClauses("responder", identity),
+    ],
+  })
+    .sort({ respondedAt: -1, timestamp: -1 })
+    .limit(300)
+    .lean();
+  json(res, 200, { chats: documents.map(publicSupportRequest) });
+}
+
+async function getSupportChatMessages(req, res, url, requestId) {
+  requireId(requestId, "Identificador de solicitud");
+  const identity = supportIdentityFromQuery(url);
+  const request = await SupportRequest.findOne({ requestId }).lean();
+  if (!request) throw new HttpError(404, "Solicitud de soporte no encontrada.");
+  if (!isSupportParticipant(request, identity))
+    throw new HttpError(403, "No tienes acceso a esta conversación.");
+  const messages = await SupportMessage.find({ requestId })
+    .sort({ timestamp: 1 })
+    .limit(1000)
+    .lean();
+  json(res, 200, {
+    request: publicSupportRequest(request),
+    messages: messages.map(publicSupportMessage),
+  });
+}
+
+async function postSupportChatMessage(req, res, requestId) {
+  requireId(requestId, "Identificador de solicitud");
+  const body = await readJsonBody(req);
+  const identity = supportIdentityFromPayload(
+    body,
+    "senderId",
+    "senderName",
+    "senderRole",
+  );
+  const request = await SupportRequest.findOne({ requestId });
+  if (!request) throw new HttpError(404, "Solicitud de soporte no encontrada.");
+  if (!isSupportParticipant(request, identity))
+    throw new HttpError(403, "No tienes acceso a esta conversación.");
+  if (!request.responderName)
+    throw new HttpError(409, "La conversación todavía no ha sido iniciada.");
+  if (request.status === "resuelta")
+    throw new HttpError(409, "La solicitud de soporte ya fue resuelta.");
+  const content = safeText(body.content, 500, "El mensaje");
+  const message = await SupportMessage.create({
+    messageId: randomUUID(),
+    requestId,
+    buildingId: request.buildingId,
+    senderId: identity.userId,
+    senderName: identity.name,
+    senderRole: identity.role,
+    content,
+    timestamp: new Date(),
+  });
+  json(res, 201, { message: publicSupportMessage(message) });
+}
+
+async function postSupportResolution(req, res, requestId) {
+  requireId(requestId, "Identificador de solicitud");
+  const form = await parseForm(req);
+  const identity = supportIdentityFromPayload(
+    {
+      responderId: form.get("responderId"),
+      responderName: form.get("responderName"),
+      responderRole: form.get("responderRole"),
+    },
+    "responderId",
+    "responderName",
+    "responderRole",
+  );
+  if (identity.role !== "mantenimiento")
+    throw new HttpError(
+      403,
+      "Solo el personal de mantenimiento puede resolver solicitudes de soporte.",
+    );
+  const problem = safeText(
+    form.get("problem"),
+    MAX_SUPPORT_TEXT,
+    "El problema encontrado",
+  );
+  const solution = safeText(
+    form.get("resolution"),
+    MAX_SUPPORT_TEXT,
+    "La solución aplicada",
+  );
+  const request = await SupportRequest.findOne({ requestId });
+  if (!request) throw new HttpError(404, "Solicitud de soporte no encontrada.");
+  if (request.status === "resuelta")
+    throw new HttpError(409, "La solicitud de soporte ya fue resuelta.");
+  if (request.responderName && !samePerson(identity, request, "responder"))
+    throw new HttpError(
+      403,
+      "La solicitud está asignada a otro usuario de mantenimiento.",
+    );
+  const evidenceFiles = form.getAll("evidence");
+  if (
+    evidenceFiles.length < 1 ||
+    evidenceFiles.length > MAX_FILES ||
+    evidenceFiles.some((file) => typeof file?.arrayBuffer !== "function")
+  )
+    throw new HttpError(400, `Adjunta entre 1 y ${MAX_FILES} imágenes.`);
+  if (
+    evidenceFiles.some(
+      (file) => file.size > MAX_FILE_BYTES || !SUPPORT_IMAGE_TYPES.has(file.type),
+    )
+  )
+    throw new HttpError(
+      413,
+      "Las imágenes deben ser JPG, PNG o WebP y pesar hasta 5 MB.",
+    );
+
+  const { bucket, saved } = await uploadEvidence(evidenceFiles, {
+    bucketName: SUPPORT_EVIDENCE_BUCKET,
+    allowedTypes: SUPPORT_IMAGE_TYPES,
+    invalidMessage: "Solo se admiten imágenes JPG, PNG o WebP válidas.",
+  });
+  try {
+    const now = new Date();
+    const resolutionDocument = await SupportResolution.create({
+      resolutionId: randomUUID(),
+      requestId,
+      buildingId: request.buildingId,
+      responderId: identity.userId,
+      responderName: identity.name,
+      responderRole: identity.role,
+      requesterId: request.requesterId ?? null,
+      requesterName: request.requesterName,
+      requesterRole: request.requesterRole ?? "",
+      requestDescription: request.description,
+      requestCreatedAt: request.timestamp,
+      problem,
+      resolution: solution,
+      evidence: saved,
+      resolvedAt: now,
+    });
+    await SupportRequest.updateOne(
+      { requestId },
+      {
+        $set: {
+          status: "resuelta",
+          responderId: identity.userId,
+          responderName: identity.name,
+          responderRole: identity.role,
+          respondedAt: request.respondedAt ?? now,
+          resolvedAt: now,
+        },
+      },
+    );
+    json(res, 201, {
+      resolution: publicSupportResolution(resolutionDocument),
+    });
+  } catch (error) {
+    await Promise.allSettled(saved.map((item) => bucket.delete(item.fileId)));
+    throw error;
+  }
+}
+
+async function getSupportResolutions(req, res, url) {
+  const identity = supportIdentityFromQuery(url);
+  const canSeeAll = ["mantenimiento", "administracion"].includes(identity.role);
+  const filter = canSeeAll
+    ? {}
+    : { $or: identityClauses("requester", identity) };
+  const documents = await SupportResolution.find(filter)
+    .sort({ resolvedAt: -1 })
+    .limit(300)
+    .lean();
+  json(res, 200, { resolutions: documents.map(publicSupportResolution) });
+}
+
+async function getSupportEvidence(req, res, resolutionId, fileId) {
+  requireId(resolutionId, "Identificador de resolución");
+  if (!mongoose.isValidObjectId(fileId))
+    throw new HttpError(400, "Archivo no válido.");
+  const resolutionDocument = await SupportResolution.findOne({
+    resolutionId,
+  }).lean();
+  if (!resolutionDocument)
+    throw new HttpError(404, "Resolución no encontrada.");
+  const evidence = (resolutionDocument.evidence ?? []).find(
+    (item) => item.fileId.toString() === fileId,
+  );
+  if (!evidence) throw new HttpError(404, "Evidencia no encontrada.");
+  const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+    bucketName: SUPPORT_EVIDENCE_BUCKET,
+  });
+  res.writeHead(200, {
+    "Content-Type": evidence.mimeType,
+    "Content-Disposition": `inline; filename="${evidence.filename.replace(/["\\]/g, "_")}"`,
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+  });
+  const stream = bucket.openDownloadStream(evidence.fileId);
+  stream.on("error", (error) => {
+    logger.error("support evidence download failed", { error: error.message });
+    if (!res.headersSent)
+      json(res, 500, { error: "No se pudo descargar la evidencia." });
+    else res.destroy();
+  });
+  stream.pipe(res);
+}
+
 function requireHistoryToken(req) {
   const expected = process.env.HISTORY_API_TOKEN
 
@@ -350,8 +768,69 @@ export function startHttpApi(port = config.apiPort) {
         /^\/api\/emergencias\/([^/]+)\/respuestas(?:\/([^/]+))?$/,
       );
       const evidenceMatch = path.match(/^\/api\/evidencias\/([^/]+)$/);
+      const supportRequestActionMatch = path.match(
+        /^\/api\/soporte\/solicitudes\/([^/]+)\/(responder|resolver)$/,
+      );
+      const supportChatMessagesMatch = path.match(
+        /^\/api\/soporte\/chats\/([^/]+)\/mensajes$/,
+      );
+      const supportEvidenceMatch = path.match(
+        /^\/api\/soporte\/resueltos\/([^/]+)\/evidencias\/([^/]+)$/,
+      );
 
-       
+      if (req.method === "GET" && path === "/api/soporte/solicitudes") {
+        await getSupportRequests(req, res, requestUrl);
+        return;
+      }
+      if (
+        req.method === "POST" &&
+        supportRequestActionMatch?.[2] === "responder"
+      ) {
+        await respondSupportRequest(req, res, supportRequestActionMatch[1]);
+        return;
+      }
+      if (
+        req.method === "POST" &&
+        supportRequestActionMatch?.[2] === "resolver"
+      ) {
+        await postSupportResolution(req, res, supportRequestActionMatch[1]);
+        return;
+      }
+      if (req.method === "GET" && path === "/api/soporte/chats") {
+        await getSupportChats(req, res, requestUrl);
+        return;
+      }
+      if (req.method === "GET" && supportChatMessagesMatch) {
+        await getSupportChatMessages(
+          req,
+          res,
+          requestUrl,
+          supportChatMessagesMatch[1],
+        );
+        return;
+      }
+      if (req.method === "POST" && supportChatMessagesMatch) {
+        await postSupportChatMessage(
+          req,
+          res,
+          supportChatMessagesMatch[1],
+        );
+        return;
+      }
+      if (req.method === "GET" && path === "/api/soporte/resueltos") {
+        await getSupportResolutions(req, res, requestUrl);
+        return;
+      }
+      if (req.method === "GET" && supportEvidenceMatch) {
+        await getSupportEvidence(
+          req,
+          res,
+          supportEvidenceMatch[1],
+          supportEvidenceMatch[2],
+        );
+        return;
+      }
+
       if (req.method === 'GET' && path === '/api/emergencies/history/export') {
         requireHistoryToken(req)
 

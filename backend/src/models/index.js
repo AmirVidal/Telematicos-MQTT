@@ -7,7 +7,9 @@ import { IncidentType } from "./IncidentType.js";
 import { Message } from "./Message.js";
 import { Presence } from "./Presence.js";
 import { Role } from "./Role.js";
+import { SupportMessage } from "./SupportMessage.js";
 import { SupportRequest } from "./SupportRequest.js";
+import { SupportResolution } from "./SupportResolution.js";
 import { User } from "./User.js";
 import { Emergency } from './Emergency.js'
 
@@ -22,7 +24,9 @@ export {
   Message,
   Presence,
   Role,
+  SupportMessage,
   SupportRequest,
+  SupportResolution,
   User,
 };
 
@@ -36,7 +40,9 @@ export const models = {
   Message,
   Presence,
   Role,
+  SupportMessage,
   SupportRequest,
+  SupportResolution,
   User,
 };
 
