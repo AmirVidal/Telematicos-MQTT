@@ -321,6 +321,95 @@ async function postResponse(req, res, emergencyId) {
   }
 }
 
+async function listEmergencyResponsesForReview(
+  req,
+  res,
+  emergencyId
+) {
+  requireId(emergencyId, 'Identificador de emergencia')
+
+  const responses = await EmergencyResponse.find({
+    emergencyId,
+    buildingId: config.buildingId
+  })
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .lean()
+
+  json(res, 200, {
+    responses: responses.map(publicResponse)
+  })
+}
+
+async function getEmergencyEvidenceForReview(
+  req,
+  res,
+  emergencyId,
+  fileId
+) {
+  requireId(emergencyId, 'Identificador de emergencia')
+
+  if (!mongoose.isValidObjectId(fileId)) {
+    throw new HttpError(400, 'Identificador de evidencia inválido.')
+  }
+
+  const objectId = new mongoose.Types.ObjectId(fileId)
+
+  const response = await EmergencyResponse.findOne({
+    emergencyId,
+    buildingId: config.buildingId,
+    'evidence.fileId': objectId
+  })
+
+  if (!response) {
+    throw new HttpError(404, 'Evidencia no encontrada.')
+  }
+
+  const evidence = response.evidence.find(
+    (item) => item.fileId.toString() === fileId
+  )
+
+  if (!evidence) {
+    throw new HttpError(404, 'Archivo no encontrado.')
+  }
+
+  const bucket = new mongoose.mongo.GridFSBucket(
+    mongoose.connection.db,
+    { bucketName: 'emergency_evidence' }
+  )
+
+  const safeFilename = evidence.filename.replace(
+    /["\\\r\n]/g,
+    '_'
+  )
+
+  res.writeHead(200, {
+    'Content-Type': evidence.mimeType,
+    'Content-Disposition':
+      `attachment; filename="${safeFilename}"`,
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff'
+  })
+
+  const stream = bucket.openDownloadStream(evidence.fileId)
+
+  stream.on('error', (error) => {
+    logger.error('supervisor evidence download failed', {
+      error: error.message
+    })
+
+    if (!res.headersSent) {
+      json(res, 500, {
+        error: 'No se pudo descargar la evidencia.'
+      })
+    } else {
+      res.destroy()
+    }
+  })
+
+  stream.pipe(res)
+}
+
 async function getResponse(req, res, emergencyId, responseId) {
   requireId(emergencyId, "Identificador de emergencia");
   requireId(responseId, "Identificador de respuesta");
@@ -803,6 +892,9 @@ export function startHttpApi(port = config.apiPort) {
         /^\/api\/emergencias\/([^/]+)\/respuestas(?:\/([^/]+))?$/,
       );
       const evidenceMatch = path.match(/^\/api\/evidencias\/([^/]+)$/);
+      const supervisorEvidenceMatch = path.match(
+          /^\/api\/emergencias\/([^/]+)\/evidencias\/([^/]+)$/
+        );
       const supportRequestActionMatch = path.match(
         /^\/api\/soporte\/solicitudes\/([^/]+)\/(responder|resolver)$/,
       );
@@ -893,6 +985,33 @@ export function startHttpApi(port = config.apiPort) {
         json(res, 200, result)
         return
       }
+      if (
+  req.method === 'GET' &&
+  responseMatch &&
+  !responseMatch[2]
+) {
+  await listEmergencyResponsesForReview(
+    req,
+    res,
+    responseMatch[1]
+  )
+  return
+}
+
+if (
+  req.method === 'GET' &&
+  supervisorEvidenceMatch
+) {
+  await getEmergencyEvidenceForReview(
+    req,
+    res,
+    supervisorEvidenceMatch[1],
+    supervisorEvidenceMatch[2]
+  )
+  return
+}
+
+
       if (req.method === "POST" && responseMatch && !responseMatch[2]) {
         await postResponse(req, res, responseMatch[1]);
       } else if (req.method === "GET" && responseMatch?.[2]) {

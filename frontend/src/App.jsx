@@ -28,15 +28,22 @@ import PersonnelView from './components/personnel/PersonnelView'
 function MqttDashboard({ user, onLogout }) {
   const [seccionActiva, setSeccionActiva] = useState('mensajeria')
   const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
+  const confirmationStorageKey =
+    `mqtt_hu12_confirmed_${user.role}_${encodeURIComponent(
+      user.name.trim().toLowerCase()
+    )}`
+
   const [dismissedEmergencyIds, setDismissedEmergencyIds] = useState(() => {
     try {
-      const stored = sessionStorage.getItem(`mqtt_hu12_dismissed_${user.id}`)
+      const stored =
+        localStorage.getItem(confirmationStorageKey) ??
+        sessionStorage.getItem(`mqtt_hu12_dismissed_${user.id}`)
 
-      if (!stored) return []
+      const parsed = JSON.parse(stored || '[]')
 
-      const parsed = JSON.parse(stored)
-
-      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : []
+      return Array.isArray(parsed)
+        ? parsed.filter((id) => typeof id === 'string')
+        : []
     } catch {
       return []
     }
@@ -82,14 +89,41 @@ function MqttDashboard({ user, onLogout }) {
     setSelectedChannelId(channelId)
   }
   useEffect(() => {
-    sessionStorage.setItem(`mqtt_hu12_dismissed_${user.id}`, JSON.stringify(dismissedEmergencyIds))
-  }, [user.id, dismissedEmergencyIds])
+    try {
+      localStorage.setItem(
+        confirmationStorageKey,
+        JSON.stringify(dismissedEmergencyIds)
+      )
+    } catch (error) {
+      console.warn(
+        'No se pudieron guardar las confirmaciones:',
+        error
+      )
+    }
+  }, [confirmationStorageKey, dismissedEmergencyIds])
   const pendingEmergency =
-    emergencyAlerts.find(
-      (alert) =>
-        activeEmergencies.some((active) => active.id === alert.id) &&
-        !dismissedEmergencyIds.includes(alert.id)
-    ) ?? null
+    emergencyAlerts.find((alert) => {
+      const isActive = activeEmergencies.some(
+        (active) => active.id === alert.id
+      )
+
+      const confirmedLocally =
+        dismissedEmergencyIds.includes(alert.id)
+
+      const confirmedByMqtt = acknowledgments.some(
+        (item) =>
+          item.emergencyId === alert.id &&
+          item.userRole === user.role &&
+          item.userName?.trim().toLowerCase() ===
+            user.name.trim().toLowerCase()
+      )
+
+      return (
+        isActive &&
+        !confirmedLocally &&
+        !confirmedByMqtt
+      )
+    }) ?? null
   function handleDismissEmergency(alertId) {
     setDismissedEmergencyIds((previous) => {
       if (previous.includes(alertId)) {
@@ -202,7 +236,6 @@ function App() {
     if (user?.id) {
       sessionStorage.removeItem(`mqtt_hu12_alerts_${user.id}`)
 
-      sessionStorage.removeItem(`mqtt_hu12_dismissed_${user.id}`)
       clearOwnEmergencyResponses(user.id)
     }
 

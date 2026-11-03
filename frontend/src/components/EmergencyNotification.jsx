@@ -3,7 +3,6 @@ import { getEmergencyTypeLabel } from '../config/emergencyOptions'
 
 export default function EmergencyNotification({
   alert,
-  onDismiss,
   onConfirm,
   connected = false,
   confirmed = false
@@ -121,46 +120,37 @@ export default function EmergencyNotification({
         </div>
 
         <div className="emergency-modal-footer">
-          <p>
-            Puedes confirmar que leíste la emergencia
-            o cerrar el aviso sin confirmar.
-          </p>
-
-          {confirmationError && (
-            <p className="hu13-error" role="alert">
-              {confirmationError}
+            <p>
+              Confirma que has leído y comprendido
+              la alerta de emergencia.
             </p>
-          )}
 
-          <div className="hu13-modal-actions">
-            <button
-              ref={buttonRef}
-              type="button"
-              className="emergency-dismiss-button"
-              onClick={() => onDismiss(alert.id)}
-              disabled={confirming}
-            >
-              Cerrar aviso
-            </button>
+            {confirmationError && (
+              <p className="hu13-error" role="alert">
+                {confirmationError}
+              </p>
+            )}
 
-            <button
-              type="button"
-              className="hu13-confirm-button"
-              onClick={handleConfirm}
-              disabled={
-                !connected ||
-                confirming ||
-                confirmed
-              }
-            >
-              {confirmed
-                ? 'Lectura confirmada'
-                : confirming
-                  ? 'Confirmando...'
-                  : 'Confirmar lectura'}
-            </button>
+            <div className="hu13-modal-actions">
+              <button
+                ref={buttonRef}
+                type="button"
+                className="hu13-confirm-button"
+                onClick={handleConfirm}
+                disabled={
+                  !connected ||
+                  confirming ||
+                  confirmed
+                }
+              >
+                {confirmed
+                  ? 'Lectura confirmada'
+                  : confirming
+                    ? 'Confirmando...'
+                    : 'Confirmar lectura'}
+              </button>
+            </div>
           </div>
-        </div>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import EmergencyAcknowledgments from '../EmergencyAcknowledgments'
 import EmergencyAlertForm from '../EmergencyAlertForm'
 import EmergencyResponseForm from '../EmergencyResponseForm'
 import './EmergencyView.css'
+import EmergencyResponsesReview from './EmergencyResponsesReview'
 
 export default function EmergencyView({
   activeAlerts,
@@ -52,6 +53,12 @@ export default function EmergencyView({
           />
         </div>
         <div className="emergency-view-right">
+          {canResolve && (
+            <EmergencyResponsesReview
+              alert={selectedAlert}
+              user={user}
+            />
+          )}
           <EmergencyResponseForm key={selectedAlert?.id ?? 'none'} alert={selectedAlert} user={user} connected={connected} />
           {canResolve && <EmergencyAlertForm connected={connected} onSend={onSend} />}
         </div>

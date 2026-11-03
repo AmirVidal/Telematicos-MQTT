@@ -448,79 +448,74 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       // MENSAJES DE EMERGENCIAS ACTIVAS
 
       if (receivedTopic.startsWith(activePrefix)) {
-        const alertId = receivedTopic.slice(activePrefix.length)
+  const alertId = receivedTopic.slice(activePrefix.length)
 
-        if (!/^[0-9a-f-]{36}$/i.test(alertId)) {
-          return
-        }
+  if (!/^[0-9a-f-]{36}$/i.test(alertId)) {
+    return
+  }
 
-        // UN MENSAJE RETENIDO VACÍO SIGNIFICA
-        // QUE LA EMERGENCIA FUE RESUELTA
+  // Una publicación retenida con contenido vacío indica
+  // que la emergencia fue resuelta.
+  if (payload.length === 0) {
+    setActiveEmergencies((previous) =>
+      previous.filter((item) => item.id !== alertId)
+    )
 
-        if (payload.length === 0) {
-          setActiveEmergencies((previous) => {
-            const exists = previous.some(
-              (item) => item.id === alert.id
-            )
+    // No se elimina del historial porque la emergencia
+    // debe conservarse como registro.
+    return
+  }
 
-            if (exists) {
-              return previous.map((item) =>
-                item.id === alert.id
-                  ? { ...item, ...alert }
-                  : item
-              )
-            }
+  // Recibir una emergencia activa o su actualización.
+  try {
+    const alert = parseEmergency(
+      receivedTopic,
+      payload
+    )
 
-            return [alert, ...previous].slice(0, 100)
-          })
-        }
+    setActiveEmergencies((previous) => {
+      const exists = previous.some(
+        (item) => item.id === alert.id
+      )
 
-        // RECUPERAR EMERGENCIAS ACTIVAS
-
-        try {
-          const alert = parseEmergency(
-            receivedTopic,
-            payload
-          )
-
-          setActiveEmergencies((previous) => {
-            const exists = previous.some(
-              (item) => item.id === alert.id
-            )
-
-            if (exists) {
-              return previous
-            }
-
-            return [alert, ...previous].slice(0, 100)
-          })
-
-          // CONSERVAR TAMBIÉN EN EL HISTORIAL
-
-          setEmergencyAlerts((previous) => {
-            const exists = previous.some(
-              (item) => item.id === alert.id
-            )
-
-              if (exists) {
-                return previous.map((item) =>
-                  item.id === alert.id
-                    ? { ...item, ...alert }
-                    : item
-                )
-              }
-
-              return [alert, ...previous].slice(0, 100)
-          })
-        } catch (receiveError) {
-          console.warn(
-            'HU12: emergencia activa descartada:',
-            receiveError.message
-          )
-        }
-
-        return
+      if (exists) {
+        // Actualizar los datos de una emergencia existente.
+        return previous.map((item) =>
+          item.id === alert.id
+            ? { ...item, ...alert }
+            : item
+        )
       }
+
+      // Registrar una nueva emergencia activa.
+      return [alert, ...previous].slice(0, 100)
+    })
+
+    // Conservar el registro en el historial de la sesión.
+    setEmergencyAlerts((previous) => {
+      const exists = previous.some(
+        (item) => item.id === alert.id
+      )
+
+      if (exists) {
+        return previous.map((item) =>
+          item.id === alert.id
+            ? { ...item, ...alert }
+            : item
+        )
+      }
+
+      return [alert, ...previous].slice(0, 100)
+    })
+  } catch (receiveError) {
+    console.warn(
+      'HU12: emergencia activa descartada:',
+      receiveError.message
+    )
+  }
+
+  return
+}
 
       // MENSAJES NUEVOS DEL CANAL GENERAL
 
