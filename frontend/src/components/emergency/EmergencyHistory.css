@@ -197,3 +197,16 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.history-notice {
+  padding: 14px;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.history-filters input[aria-invalid='true'] {
+  border-color: #dc2626;
+  outline-color: #dc2626;
+}
