@@ -1,17 +1,9 @@
 import { useState } from 'react'
-import { USER_ROLES, createUserSession } from '../services/userSession'
-
-const ROLE_OPTIONS = [
-  { value: USER_ROLES.SEGURIDAD, label: 'Seguridad' },
-  { value: USER_ROLES.MANTENIMIENTO, label: 'Mantenimiento' },
-  { value: USER_ROLES.RECEPCION, label: 'Recepción' },
-  { value: USER_ROLES.LIMPIEZA, label: 'Limpieza' },
-  { value: USER_ROLES.ADMINISTRACION, label: 'Administración' }
-]
+import { authenticateUser } from '../services/userSession'
 
 export default function UserIdentification({ onIdentify }) {
-  const [name, setName] = useState('')
-  const [role, setRole] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -24,10 +16,10 @@ export default function UserIdentification({ onIdentify }) {
     setSubmitting(true)
 
     try {
-      const user = createUserSession(name, role)
+      const user = authenticateUser(username, password)
       onIdentify(user)
     } catch (err) {
-      setError(err.message || 'No se pudo registrar la identificación.')
+      setError(err.message || 'No se pudo registrar la identificacion.')
     } finally {
       setSubmitting(false)
     }
@@ -37,49 +29,42 @@ export default function UserIdentification({ onIdentify }) {
     <main className="identification-page">
       <section className="identification-card">
         <div className="identification-header">
-          <h1>Sistema de Mensajería MQTT</h1>
-          <p>Identificación del personal del edificio</p>
+          <h1>Sistema de Mensajeria MQTT</h1>
+          <p>Identificacion del personal del edificio</p>
         </div>
 
         <form onSubmit={handleSubmit} className="identification-form">
           <div className="form-group">
-            <label htmlFor="user-name">Nombre completo</label>
+            <label htmlFor="user-username">Usuario</label>
 
             <input
-              id="user-name"
+              id="user-username"
               type="text"
-              value={name}
+              value={username}
               onChange={(event) => {
-                setName(event.target.value)
+                setUsername(event.target.value)
                 setError('')
               }}
-              placeholder="Ingrese su nombre completo"
-              maxLength={50}
-              autoComplete="name"
+              placeholder="Ingrese su usuario"
+              autoComplete="username"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="user-role">Tipo de personal</label>
+            <label htmlFor="user-password">Contrasena</label>
 
-            <select
-              id="user-role"
-              value={role}
+            <input
+              id="user-password"
+              type="password"
+              value={password}
               onChange={(event) => {
-                setRole(event.target.value)
+                setPassword(event.target.value)
                 setError('')
               }}
+              autoComplete="current-password"
               required
-            >
-              <option value="">Seleccione su área de trabajo</option>
-
-              {ROLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {error && (
@@ -93,7 +78,7 @@ export default function UserIdentification({ onIdentify }) {
           </button>
         </form>
 
-        <p className="identification-footer">Plataforma de comunicación del personal operativo</p>
+        <p className="identification-footer">Plataforma de comunicacion del personal operativo</p>
       </section>
     </main>
   )

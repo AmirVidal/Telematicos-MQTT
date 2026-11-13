@@ -73,6 +73,8 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       url,
       clientId,
       userRole,
+      username: user?.username,
+      password: user?.password,
       will: userId ? createPresenceWill(clientId) : undefined,
 
       onStatus: (nextStatus) => {
@@ -126,7 +128,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
         connection.stop()
       }
     }
-  }, [url, clientId, userId, userName, userRole])
+  }, [url, clientId, userId, userName, userRole, user?.username, user?.password])
 
   // MENSAJERÍA NORMAL
 

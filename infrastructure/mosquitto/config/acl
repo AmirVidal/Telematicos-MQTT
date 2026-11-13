@@ -37,3 +37,8 @@ topic write edificio/+/alertas/emergencias/activas/+
 user administracion
 topic write edificio/+/alertas/emergencias
 topic write edificio/+/alertas/emergencias/activas/+
+# Mantenimiento (segunda unidad)
+
+user mantenimiento2
+ topic write edificio/+/alertas/emergencias
+ topic write edificio/+/alertas/emergencias/activas/+

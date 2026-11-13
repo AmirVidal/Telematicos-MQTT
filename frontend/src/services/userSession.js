@@ -1,4 +1,4 @@
-const SESSION_KEY = 'mqtt_user_session'
+﻿const SESSION_KEY = 'mqtt_user_session'
 
 export const USER_ROLES = Object.freeze({
   SEGURIDAD: 'seguridad',
@@ -69,4 +69,34 @@ export function getUserSession() {
 
 export function clearUserSession() {
   sessionStorage.removeItem(SESSION_KEY)
+}
+
+export const LOGIN_USERS = Object.freeze([
+  { username: 'seguridad', password: 'seg123', name: 'Carlos Ramirez', role: USER_ROLES.SEGURIDAD },
+  { username: 'mantenimiento', password: 'pass123', name: 'Juan Perez', role: USER_ROLES.MANTENIMIENTO },
+  { username: 'mantenimiento2', password: 'pass123', name: 'Ana Gomez', role: USER_ROLES.MANTENIMIENTO },
+  { username: 'recepcion', password: 'recep123', name: 'Laura Fernandez', role: USER_ROLES.RECEPCION },
+  { username: 'limpieza', password: 'limp123', name: 'Pedro Sanchez', role: USER_ROLES.LIMPIEZA },
+  { username: 'administracion', password: 'admin123', name: 'Maria Torres', role: USER_ROLES.ADMINISTRACION }
+])
+
+export function authenticateUser(username, password) {
+  const normalizedUsername = typeof username === 'string' ? username.trim().toLowerCase() : ''
+  const account = LOGIN_USERS.find((candidate) => candidate.username === normalizedUsername)
+
+  if (!account || account.password !== password) {
+    throw new Error('Usuario o contrasena incorrectos.')
+  }
+
+  const user = {
+    id: crypto.randomUUID(),
+    name: account.name,
+    role: account.role,
+    username: account.username,
+    password: account.password
+  }
+
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
+
+  return user
 }
