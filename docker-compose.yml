@@ -1,0 +1,62 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: telematicos-mqtt-broker
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:1883:1883"
+      - "127.0.0.1:9001:9001"
+
+    volumes:
+      - "./infrastructure/mosquitto/config:/mosquitto/config:ro"
+      - "./infrastructure/mosquitto/data:/mosquitto/data"
+      - "./infrastructure/mosquitto/log:/mosquitto/log"
+
+  mongo:
+    image: mongo:7
+    container_name: telematicos-mongodb
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:27017:27017"
+
+    volumes:
+      - mongo_data:/data/db
+
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    container_name: telematicos-mqtt-db-writer
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:3001:3001"
+
+    environment:
+      API_PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/telematicos
+      MQTT_URL: mqtt://mosquitto:1883
+      MQTT_USERNAME: administracion
+      MQTT_PASSWORD: admin123
+      MQTT_CLIENT_ID: telematicos-db-writer
+      MQTT_TOPIC_FILTER: "edificio/+/#"
+      BUILDING_ID: principal
+      PRESENCE_TTL_MS: 90000
+      LOG_LEVEL: info
+      HISTORY_API_TOKEN: ${HISTORY_API_TOKEN:?Configura HISTORY_API_TOKEN en el archivo .env}
+
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+
+volumes:
+  mongo_data:

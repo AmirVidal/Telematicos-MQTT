@@ -1,0 +1,181 @@
+.mensajeria-vista {
+  width: 100%;
+  min-width: 0;
+}
+
+.mensajeria-distribucion {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.mensajeria-canales,
+.mensajeria-conversacion {
+  min-width: 0;
+}
+
+.mensajeria-canales .tarjeta,
+.mensajeria-conversacion .tarjeta {
+  box-shadow: none;
+}
+
+.mensajeria-canales .selector-canal {
+  margin-bottom: 0;
+}
+
+.mensajeria-conversacion {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e0e6ee;
+  border-radius: 18px;
+  background: #fff;
+  height: clamp(480px, calc(100dvh - 180px), 720px);
+}
+
+.mensajeria-conversacion-cabecera {
+  padding: 22px 24px;
+  border-bottom: 1px solid #e0e6ee;
+}
+
+.mensajeria-conversacion-cabecera h3 {
+  margin: 0 0 4px;
+  color: #12253d;
+  font-size: 19px;
+}
+
+.mensajeria-conversacion-cabecera p {
+  margin: 0;
+  color: #61748a;
+  font-size: 13px;
+}
+
+.mensajeria-conversacion-mensajes {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mensajeria-conversacion-envio {
+  flex-shrink: 0;
+  padding: 16px;
+  border-top: 1px solid #e0e6ee;
+  background: #fff;
+}
+
+.mensajeria-conversacion-mensajes .tarjeta,
+.mensajeria-conversacion-envio .tarjeta {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.mensajeria-conversacion-envio .message-composer {
+  margin-top: 0;
+}
+
+.mensajeria-conversacion-mensajes .mensajes-recibidos {
+  gap: 0;
+}
+
+.mensajeria-conversacion-mensajes .lista-mensajes {
+  gap: 12px;
+}
+
+.mensajeria-conversacion-mensajes .mensaje-item {
+  width: fit-content;
+  max-width: 75%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  overflow-wrap: anywhere;
+}
+
+.mensajeria-conversacion-mensajes .mensaje-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+}
+
+.mensajeria-conversacion-mensajes .mensaje-fecha {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .mensajeria-conversacion-mensajes .mensaje-item {
+    max-width: 90%;
+  }
+}
+
+.mensajeria-conversacion-mensajes .mensaje-item--propio {
+  margin-left: auto;
+}
+
+.mensajeria-conversacion-mensajes .mensajes-vacios {
+  padding: 35px 12px;
+  text-align: center;
+}
+
+.mensajeria-conversacion-envio .message-composer form {
+  gap: 10px;
+}
+
+.mensajeria-conversacion-envio .message-composer textarea {
+  min-height: 75px;
+}
+
+.mensajeria-canales .selector-canal--compact {
+  padding: 22px;
+}
+
+.mensajeria-canales .selector-canal--compact h2 {
+  font-size: 18px;
+}
+
+.mensajeria-canales .selector-canal--compact .selector-canal-etiqueta {
+  margin-top: 18px;
+}
+
+.mensajeria-canales .selector-canal-actual {
+  margin: 14px 0 0;
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: #eefaf3;
+  color: #1c6940;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mensajeria-canales .selector-canal-actual strong {
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .mensajeria-distribucion {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .mensajeria-conversacion-cabecera {
+    padding: 16px;
+  }
+
+  .mensajeria-conversacion-mensajes,
+  .mensajeria-conversacion-envio {
+    padding: 12px;
+  }
+
+  .mensajeria-conversacion-mensajes .mensaje-item {
+    max-width: 92%;
+  }
+}
