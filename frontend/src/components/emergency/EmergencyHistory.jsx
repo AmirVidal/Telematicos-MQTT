@@ -65,6 +65,27 @@ function formatDate(value) {
     : date.toLocaleString('es-BO')
 }
     
+async function downloadResponseEvidence(emergencyId, evidence) {
+  const response = await fetch(
+    `/api/emergencias/${encodeURIComponent(emergencyId)}/evidencias/${encodeURIComponent(evidence.id)}`
+  )
+
+  if (!response.ok) {
+    throw new Error('No se pudo descargar la evidencia.')
+  }
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = evidence.filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+
+  URL.revokeObjectURL(url)
+}
 
 function getTodayDate() {
   const today = new Date()
@@ -375,34 +396,105 @@ function getTodayDate() {
           >
             <h3 id="history-detail-title">Detalle de emergencia</h3>
 
-            <dl>
-              <dt>Identificador</dt>
-              <dd className="history-break">{selected.emergencyId}</dd>
+            
+<dl>
+  <dt>Identificador</dt>
+  <dd className="history-break">{selected.emergencyId}</dd>
 
-              <dt>Tipo</dt>
-              <dd>{getEmergencyTypeLabel(selected.emergencyType)}</dd>
+  <dt>Tipo</dt>
+  <dd>{getEmergencyTypeLabel(selected.emergencyType)}</dd>
 
-              <dt>Ubicación</dt>
-              <dd>{selected.location}</dd>
+  <dt>Ubicación</dt>
+  <dd>{selected.location}</dd>
 
-              <dt>Descripción</dt>
-              <dd className="history-break">{selected.description}</dd>
+  <dt>Descripción / mensaje original</dt>
+  <dd className="history-break">{selected.description}</dd>
 
-              <dt>Estado</dt>
-              <dd>{STATUS_LABELS[selected.status] ?? selected.status}</dd>
+  <dt>Estado</dt>
+  <dd>{STATUS_LABELS[selected.status] ?? selected.status}</dd>
 
-              <dt>Reportado por</dt>
-              <dd>{selected.senderName ?? 'No registrado'}</dd>
+  <dt>Reportado por</dt>
+  <dd>{selected.senderName ?? 'No registrado'}</dd>
 
-              <dt>Rol</dt>
-              <dd>{selected.senderRole ?? 'No registrado'}</dd>
+  <dt>Rol del reportante</dt>
+  <dd>{selected.senderRole ?? 'No registrado'}</dd>
 
-              <dt>Fecha de alerta</dt>
-              <dd>{formatDate(selected.timestamp)}</dd>
+  <dt>Fecha de alerta</dt>
+  <dd>{formatDate(selected.timestamp)}</dd>
 
-              <dt>Fecha de resolución</dt>
-              <dd>{formatDate(selected.resolvedAt)}</dd>
-            </dl>
+  <dt>Rol responsable</dt>
+  <dd>{selected.assignedRole ?? 'Sin asignar'}</dd>
+
+  <dt>Asignado por</dt>
+  <dd>{selected.assignedByName ?? 'No registrado'}</dd>
+
+  <dt>Fecha de asignación</dt>
+  <dd>{formatDate(selected.assignedAt)}</dd>
+
+  <dt>Fecha de resolución</dt>
+  <dd>{formatDate(selected.resolvedAt)}</dd>
+</dl>
+
+             
+             <section className="history-responses">
+  <h4>Respuestas del personal</h4>
+
+  {!selected.responses || selected.responses.length === 0 ? (
+    <p>No se registraron respuestas del personal.</p>
+  ) : (
+    selected.responses.map(response => (
+      <article
+        className="history-response-card"
+        key={response.responseId}
+      >
+        <h5>{response.responderName}</h5>
+
+        <p>
+          <strong>Rol:</strong> {response.responderRole}
+        </p>
+
+        <p>
+          <strong>Fecha:</strong> {formatDate(response.createdAt)}
+        </p>
+
+        <p>
+          <strong>Descripción de la atención:</strong>
+        </p>
+
+        <p className="history-break">
+          {response.description}
+        </p>
+
+        <div className="history-response-evidence">
+          <strong>Evidencias adjuntas:</strong>
+
+          {response.evidence?.length ? (
+            response.evidence.map(evidence => (
+              <button
+                key={evidence.id}
+                type="button"
+                onClick={async () => {
+                  try {
+                    await downloadResponseEvidence(
+                      selected.emergencyId,
+                      evidence
+                    )
+                  } catch (error) {
+                    setError(error.message)
+                  }
+                }}
+              >
+                <span>Descargar:</span> {evidence.filename}
+              </button>
+            ))
+          ) : (
+            <p>Sin evidencias adjuntas.</p>
+          )}
+        </div>
+      </article>
+    ))
+  )}
+</section>
 
             <button type="button" onClick={() => setSelected(null)}>
               Cerrar

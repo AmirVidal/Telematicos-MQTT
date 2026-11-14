@@ -1,6 +1,7 @@
 
 import mongoose from 'mongoose'
 import { Emergency } from './models/Emergency.js'
+import { EmergencyResponse } from './models/EmergencyResponse.js'
 
 const STATUSES = new Set([
   'activa',
@@ -108,7 +109,7 @@ export async function queryEmergencyHistory(url, buildingId) {
   const skip = (page - 1) * limit
 
   try {
-    const [total, records] = await Promise.all([
+    const [total, emergencies] = await Promise.all([
       Emergency.countDocuments(filter),
       Emergency.find(filter)
         .select('-_id -__v')
@@ -117,6 +118,51 @@ export async function queryEmergencyHistory(url, buildingId) {
         .limit(limit)
         .lean()
     ])
+
+    const emergencyIds = emergencies.map(
+      emergency => emergency.emergencyId
+    )
+
+    const responses = emergencyIds.length
+      ? await EmergencyResponse.find({
+          buildingId,
+          emergencyId: { $in: emergencyIds }
+        })
+          .select('-_id -__v -accessTokenHash')
+          .sort({ createdAt: 1 })
+          .lean()
+      : []
+
+    const responsesByEmergency = new Map()
+
+    for (const response of responses) {
+      const currentResponses =
+        responsesByEmergency.get(response.emergencyId) || []
+
+      currentResponses.push({
+        responseId: response.responseId,
+        responderId: response.responderId,
+        responderName: response.responderName,
+        responderRole: response.responderRole,
+        description: response.description,
+        evidence: (response.evidence || []).map(item => ({
+          id: item.fileId.toString(),
+          filename: item.filename,
+          mimeType: item.mimeType
+        })),
+        createdAt: response.createdAt
+      })
+
+      responsesByEmergency.set(
+        response.emergencyId,
+        currentResponses
+      )
+    }
+
+    const records = emergencies.map(emergency => ({
+      ...emergency,
+      responses: responsesByEmergency.get(emergency.emergencyId) || []
+    }))
 
     return {
       records,
@@ -127,7 +173,9 @@ export async function queryEmergencyHistory(url, buildingId) {
         totalPages: Math.ceil(total / limit)
       }
     }
-  } catch {
+  } catch (error) {
+    console.error('Error consultando historial de emergencias:', error)
+
     throw new HistoryError(
       503,
       'No se pudo consultar el historial de emergencias.'

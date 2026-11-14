@@ -38,11 +38,13 @@ export function useEmergencyAcknowledgments(clientRef, status) {
   const [acknowledgmentError, setAcknowledgmentError] = useState('')
 
   useEffect(() => {
-    if (status !== 'connected') {
-      setAcknowledgments([])
-      setAcknowledgmentError('')
-      return
-    }
+  if (status !== 'connected') {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAcknowledgments([])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAcknowledgmentError('')
+    return
+  }
 
     const client = clientRef.current
 
@@ -55,8 +57,10 @@ export function useEmergencyAcknowledgments(clientRef, status) {
 
     let active = true
 
-    setAcknowledgments([])
-    setAcknowledgmentError('')
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+setAcknowledgments([])
+// eslint-disable-next-line react-hooks/set-state-in-effect
+setAcknowledgmentError('')
 
     function handleMessage(topic, payload) {
       if (!active) return

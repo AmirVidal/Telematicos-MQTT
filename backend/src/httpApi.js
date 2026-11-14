@@ -300,10 +300,14 @@ async function postResponse(req, res, emergencyId) {
     );
   }
 
+  
   const { bucket, saved } = await uploadEvidence(evidenceFiles);
   const viewToken = randomBytes(32).toString("hex");
+
+  let createdResponse = null;
+
   try {
-    const response = await EmergencyResponse.create({
+    createdResponse = await EmergencyResponse.create({
       responseId: randomUUID(),
       emergencyId,
       buildingId: config.buildingId,
@@ -312,14 +316,63 @@ async function postResponse(req, res, emergencyId) {
       responderRole,
       description,
       evidence: saved,
-      accessTokenHash: createHash("sha256").update(viewToken).digest("hex"),
+      accessTokenHash: createHash("sha256")
+        .update(viewToken)
+        .digest("hex"),
     });
-    json(res, 201, { response: publicResponse(response), viewToken });
+
+    // Mantener la emergencia en atención mientras no esté resuelta.
+    const updateResult = await Emergency.updateOne(
+      {
+        emergencyId,
+        buildingId: config.buildingId,
+        status: { $in: ["activa", "en_atencion"] },
+      },
+      {
+        $set: {
+          status: "en_atencion",
+        },
+      },
+      {
+        runValidators: true,
+      },
+    );
+
+    // Si la emergencia fue resuelta durante el registro,
+    // no conservar una respuesta que ya no puede procesarse.
+    if (updateResult.matchedCount === 0) {
+      throw new HttpError(
+        409,
+        "La emergencia fue resuelta o ya no está disponible.",
+      );
+    }
+
+    json(res, 201, {
+      response: publicResponse(createdResponse),
+      viewToken,
+    });
   } catch (error) {
-    await Promise.allSettled(saved.map((item) => bucket.delete(item.fileId)));
+    // Eliminar la respuesta si llegó a guardarse.
+    if (createdResponse) {
+      await EmergencyResponse.deleteOne({
+        responseId: createdResponse.responseId,
+        buildingId: config.buildingId,
+      }).catch((cleanupError) => {
+        console.error(
+          "No se pudo eliminar la respuesta incompleta:",
+          cleanupError,
+        );
+      });
+    }
+
+    // Eliminar las evidencias asociadas.
+    await Promise.allSettled(
+      saved.map((item) => bucket.delete(item.fileId)),
+    );
+
     throw error;
   }
-}
+
 
 async function listEmergencyResponsesForReview(
   req,

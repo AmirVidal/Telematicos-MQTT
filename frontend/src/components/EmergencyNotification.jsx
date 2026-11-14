@@ -14,12 +14,13 @@ export default function EmergencyNotification({
   const alertId = alert?.id
 
   useEffect(() => {
-    if (alertId) {
-      buttonRef.current?.focus()
-    }
+  if (alertId) {
+    buttonRef.current?.focus()
+  }
 
-    setConfirmationError('')
-  }, [alertId])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setConfirmationError('')
+}, [alertId])
 
   async function handleConfirm() {
     if (

@@ -33,11 +33,15 @@ export default function EmergencyResponsesReview({
 
   // Cargar automáticamente las respuestas de la emergencia seleccionada.
   useEffect(() => {
-    let cancelled = false
+  let cancelled = false
 
-    setResponses([])
-    setError('')
-    setPreview(null)
+  // Se reinician los datos al cambiar de emergencia seleccionada.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setResponses([])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setError('')
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setPreview(null)
 
     if (!canReview || !alert?.id) {
       setLoading(false)
@@ -75,6 +79,20 @@ export default function EmergencyResponsesReview({
       cancelled = true
     }
   }, [alert?.id, canReview, refreshIndex])
+
+  // Actualizar automáticamente las respuestas cada 5 segundos.
+  useEffect(() => {
+    if (!canReview || !alert?.id) return
+
+    const intervalId = setInterval(() => {
+      setRefreshIndex((previous) => previous + 1)
+    }, 5000)
+
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, [alert?.id, canReview])
+
 
   // Liberar las imágenes abiertas anteriormente.
   useEffect(() => {

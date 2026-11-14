@@ -1,4 +1,5 @@
-import { useState } from 'react'
+
+import { useEffect, useRef, useState } from 'react'
 import EmergencyAlerts from '../EmergencyAlerts'
 import EmergencyAcknowledgments from '../EmergencyAcknowledgments'
 import EmergencyAlertForm from '../EmergencyAlertForm'
@@ -16,11 +17,22 @@ export default function EmergencyView({
   canResolve,
   onResolve,
   onConfirm,
-  onSend,
-  onAssignRole
+  onSend
 }) {
   const [selectedEmergencyId, setSelectedEmergencyId] = useState(null)
-  const selectedAlert = activeAlerts.find((item) => item.id === selectedEmergencyId) ?? activeAlerts[0] ?? null
+  const responseFormRef = useRef(null)
+
+  useEffect(() => {
+    if (!selectedEmergencyId) return
+
+    responseFormRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }, [selectedEmergencyId])
+
+  const selectedAlert =
+    activeAlerts.find((item) => item.id === selectedEmergencyId) ?? null
 
   return (
     <section className="emergency-view" aria-label="Gestión de emergencias">
@@ -42,7 +54,9 @@ export default function EmergencyView({
             subscriptionStatus={subscriptionStatus}
             canResolve={canResolve}
             onResolve={onResolve}
+            user={user}
           />
+
           <EmergencyAcknowledgments
             activeAlerts={activeAlerts}
             acknowledgments={acknowledgments}
@@ -52,6 +66,7 @@ export default function EmergencyView({
             error={acknowledgmentError}
           />
         </div>
+
         <div className="emergency-view-right">
           {canResolve && (
             <EmergencyResponsesReview
@@ -59,8 +74,22 @@ export default function EmergencyView({
               user={user}
             />
           )}
-          <EmergencyResponseForm key={selectedAlert?.id ?? 'none'} alert={selectedAlert} user={user} connected={connected} />
-          {canResolve && <EmergencyAlertForm connected={connected} onSend={onSend} />}
+
+          <div ref={responseFormRef} className="emergency-view-form">
+            <EmergencyResponseForm
+              key={selectedAlert?.id ?? 'none'}
+              alert={selectedAlert}
+              user={user}
+              connected={connected}
+            />
+          </div>
+
+          {canResolve && (
+            <EmergencyAlertForm
+              connected={connected}
+              onSend={onSend}
+            />
+          )}
         </div>
       </div>
     </section>

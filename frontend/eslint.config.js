@@ -17,5 +17,10 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
-  },
+  },{
+  files: ['src/components/emergency/EmergencyRoleAssignment.jsx'],
+  rules: {
+    'react-hooks/set-state-in-effect': 'off'
+  }
+}
 ])

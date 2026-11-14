@@ -210,3 +210,45 @@
   border-color: #dc2626;
   outline-color: #dc2626;
 }
+
+.history-responses {
+  margin: 22px 0;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.history-responses h4 {
+  margin: 0 0 16px;
+  font-size: 17px;
+  color: #17467d;
+}
+
+.history-response-card {
+  padding: 16px;
+  margin-bottom: 14px;
+  border: 1px solid #dbe3ed;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.history-response-card h5 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.history-response-card p {
+  margin: 7px 0;
+}
+
+.history-response-evidence {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.history-response-evidence button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
