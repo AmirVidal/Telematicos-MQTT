@@ -1,4 +1,4 @@
-import { getChannelTopic } from '../config/channelOptions'
+import { canAccessChannel, getChannelTopic } from '../config/channelOptions'
 
 export const MAX_MESSAGE_LENGTH = 500
 
@@ -34,6 +34,10 @@ export function publishMessage({ client, user, channelId, content }) {
         typeof user.role !== 'string'
       ) {
         throw new Error('El usuario no está identificado.')
+      }
+
+      if (!canAccessChannel(user.role, channelId)) {
+        throw new Error('No tienes permiso para publicar en este canal.')
       }
 
       const topic = getChannelTopic(channelId)

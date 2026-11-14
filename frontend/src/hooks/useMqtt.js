@@ -3,7 +3,7 @@ import { createClientId, createMqttConnection, MQTT_URL } from '../services/mqtt
 import { createPresenceClient, createPresenceWill } from '../services/presenceClient'
 import { publishMessage } from '../services/messagePublisher'
 import { parseReceivedMessage } from '../services/messageReceiver'
-import { getChannelTopic } from '../config/channelOptions'
+import { canAccessChannel, getChannelTopic } from '../config/channelOptions'
 import { topics } from '../config/mqttTopics'
 import { USER_ROLES } from '../services/userSession'
 import { parseIncident } from '../services/incidentReceiver'
@@ -16,17 +16,11 @@ function loadEmergencyHistory(userId) {
   if (!userId) return []
 
   try {
-    const stored = JSON.parse(
-      sessionStorage.getItem(`mqtt_hu12_alerts_${userId}`) || '[]'
-    )
+    const stored = JSON.parse(sessionStorage.getItem(`mqtt_hu12_alerts_${userId}`) || '[]')
 
     return Array.isArray(stored)
       ? stored
-          .filter(
-            (item) =>
-              typeof item?.id === 'string' &&
-              typeof item?.description === 'string'
-          )
+          .filter((item) => typeof item?.id === 'string' && typeof item?.description === 'string')
           .slice(0, 100)
       : []
   } catch {
@@ -44,16 +38,11 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
   const [supportRequests, setSupportRequests] = useState([])
   const [incidentReports, setIncidentReports] = useState([])
 
-  const [emergencyAlerts, setEmergencyAlerts] = useState(() =>
-    loadEmergencyHistory(user?.id)
-  )
+  const [emergencyAlerts, setEmergencyAlerts] = useState(() => loadEmergencyHistory(user?.id))
 
   const [activeEmergencies, setActiveEmergencies] = useState([])
 
-  const [
-    emergencySubscriptionStatus,
-    setEmergencySubscriptionStatus
-  ] = useState('pending')
+  const [emergencySubscriptionStatus, setEmergencySubscriptionStatus] = useState('pending')
 
   const [subscribedChannelId, setSubscribedChannelId] = useState(null)
 
@@ -130,12 +119,10 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     }
   }, [url, clientId, userId, userName, userRole, user?.username, user?.password])
 
-  // MENSAJERÍA NORMAL
-
   useEffect(() => {
     const client = clientRef.current
 
-    if (!client || status !== 'connected' || !selectedChannelId) {
+    if (!client || status !== 'connected' || !canAccessChannel(userRole, selectedChannelId)) {
       return
     }
 
@@ -161,10 +148,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
           return [...previous, message].slice(-200)
         })
       } catch (receiveError) {
-        console.warn(
-          'HU08: mensaje MQTT descartado:',
-          receiveError.message
-        )
+        console.warn('HU08: mensaje MQTT descartado:', receiveError.message)
       }
     }
 
@@ -175,10 +159,12 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
           return
         }
 
-        client.subscribe(topic, { qos: 1 }, (subscribeError) => {
-          if (subscribeError) {
+        client.subscribe(topic, { qos: 1 }, (subscribeError, granted) => {
+          const denied = !granted?.length || granted[0].qos >= 0x80
+
+          if (subscribeError || denied) {
             if (active) {
-              setError(subscribeError.message)
+              setError(subscribeError?.message ?? 'El broker MQTT denegó la suscripción al canal.')
             }
           } else if (active) {
             setSubscribedChannelId(selectedChannelId)
@@ -198,10 +184,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
 
         client.unsubscribe(topic, (unsubscribeError) => {
           if (unsubscribeError) {
-            console.warn(
-              'Error al cancelar suscripción:',
-              unsubscribeError.message
-            )
+            console.warn('Error al cancelar suscripción:', unsubscribeError.message)
           }
 
           resolve()
@@ -211,9 +194,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
 
     client.on('message', handleMessage)
 
-    subscriptionQueueRef.current = subscriptionQueueRef.current
-      .catch(() => {})
-      .then(subscribeAsync)
+    subscriptionQueueRef.current = subscriptionQueueRef.current.catch(() => {}).then(subscribeAsync)
 
     return () => {
       active = false
@@ -224,9 +205,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
         .catch(() => {})
         .then(unsubscribeAsync)
     }
-  }, [status, selectedChannelId])
-
-  // SOLICITUDES DE SOPORTE HU10
+  }, [status, selectedChannelId, userRole])
 
   useEffect(() => {
     const client = clientRef.current
@@ -236,8 +215,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     }
 
     const canReceiveSupport =
-      userRole === USER_ROLES?.MANTENIMIENTO ||
-      userRole === USER_ROLES?.ADMINISTRACION
+      userRole === USER_ROLES?.MANTENIMIENTO || userRole === USER_ROLES?.ADMINISTRACION
 
     if (!canReceiveSupport) {
       return
@@ -253,10 +231,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       }
 
       try {
-        const raw =
-          typeof payload === 'string'
-            ? payload
-            : new TextDecoder().decode(payload)
+        const raw = typeof payload === 'string' ? payload : new TextDecoder().decode(payload)
 
         const parsed = JSON.parse(raw)
 
@@ -269,37 +244,24 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
         }
 
         setSupportRequests((previous) => {
-          if (
-            parsed.id &&
-            previous.some((item) => item.id === parsed.id)
-          ) {
+          if (parsed.id && previous.some((item) => item.id === parsed.id)) {
             return previous
           }
 
           const request = {
             id: parsed.id || crypto.randomUUID(),
-            requesterId:
-              parsed.requesterId || parsed.senderId || null,
-            requesterName:
-              parsed.requesterName ||
-              parsed.senderName ||
-              'Desconocido',
-            requesterRole:
-              parsed.requesterRole || parsed.senderRole || '',
-            description:
-              parsed.description || parsed.content || '',
-            timestamp:
-              parsed.timestamp || new Date().toISOString(),
+            requesterId: parsed.requesterId || parsed.senderId || null,
+            requesterName: parsed.requesterName || parsed.senderName || 'Desconocido',
+            requesterRole: parsed.requesterRole || parsed.senderRole || '',
+            description: parsed.description || parsed.content || '',
+            timestamp: parsed.timestamp || new Date().toISOString(),
             topic: receivedTopic
           }
 
           return [request, ...previous].slice(0, 100)
         })
       } catch (supportError) {
-        console.warn(
-          'HU10: solicitud de soporte descartada:',
-          supportError.message
-        )
+        console.warn('HU10: solicitud de soporte descartada:', supportError.message)
       }
     }
 
@@ -310,25 +272,19 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
           return
         }
 
-        client.subscribe(
-          supportTopic,
-          { qos: 1 },
-          (subscribeError) => {
-            if (subscribeError && active) {
-              setError(subscribeError.message)
-            }
-
-            resolve()
+        client.subscribe(supportTopic, { qos: 1 }, (subscribeError) => {
+          if (subscribeError && active) {
+            setError(subscribeError.message)
           }
-        )
+
+          resolve()
+        })
       })
     }
 
     client.on('message', handleSupportMessage)
 
-    subscriptionQueueRef.current = subscriptionQueueRef.current
-      .catch(() => {})
-      .then(subscribeAsync)
+    subscriptionQueueRef.current = subscriptionQueueRef.current.catch(() => {}).then(subscribeAsync)
 
     return () => {
       active = false
@@ -347,8 +303,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     }
 
     const canReceiveIncidents =
-      userRole === USER_ROLES.SEGURIDAD ||
-      userRole === USER_ROLES.ADMINISTRACION
+      userRole === USER_ROLES.SEGURIDAD || userRole === USER_ROLES.ADMINISTRACION
 
     if (!canReceiveIncidents) {
       return
@@ -367,9 +322,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
         const incident = parseIncident(payload)
 
         setIncidentReports((previous) => {
-          const exists = previous.some(
-            (item) => item.id === incident.id
-          )
+          const exists = previous.some((item) => item.id === incident.id)
 
           if (exists) {
             return previous
@@ -378,10 +331,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
           return [incident, ...previous].slice(0, 100)
         })
       } catch (incidentError) {
-        console.warn(
-          'HU11: reporte descartado:',
-          incidentError.message
-        )
+        console.warn('HU11: reporte descartado:', incidentError.message)
       }
     }
 
@@ -404,9 +354,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
 
     client.on('message', handleIncidentMessage)
 
-    subscriptionQueueRef.current = subscriptionQueueRef.current
-      .catch(() => {})
-      .then(subscribeAsync)
+    subscriptionQueueRef.current = subscriptionQueueRef.current.catch(() => {}).then(subscribeAsync)
 
     return () => {
       active = false
@@ -426,16 +374,11 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       return
     }
 
-    const emergencyTopic =
-      topics.alertas.emergencias(EMERGENCY_BUILDING_ID)
+    const emergencyTopic = topics.alertas.emergencias(EMERGENCY_BUILDING_ID)
 
-    const activePrefix =
-      `${topics.alertas.emergenciasActivas(EMERGENCY_BUILDING_ID)}/`
+    const activePrefix = `${topics.alertas.emergenciasActivas(EMERGENCY_BUILDING_ID)}/`
 
-    const activeFilter =
-      topics.alertas.emergenciasActivasSuscripcion(
-        EMERGENCY_BUILDING_ID
-      )
+    const activeFilter = topics.alertas.emergenciasActivasSuscripcion(EMERGENCY_BUILDING_ID)
 
     let active = true
 
@@ -450,74 +393,54 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       // MENSAJES DE EMERGENCIAS ACTIVAS
 
       if (receivedTopic.startsWith(activePrefix)) {
-  const alertId = receivedTopic.slice(activePrefix.length)
+        const alertId = receivedTopic.slice(activePrefix.length)
 
-  if (!/^[0-9a-f-]{36}$/i.test(alertId)) {
-    return
-  }
+        if (!/^[0-9a-f-]{36}$/i.test(alertId)) {
+          return
+        }
 
-  // Una publicación retenida con contenido vacío indica
-  // que la emergencia fue resuelta.
-  if (payload.length === 0) {
-    setActiveEmergencies((previous) =>
-      previous.filter((item) => item.id !== alertId)
-    )
+        // Una publicación retenida con contenido vacío indica
+        // que la emergencia fue resuelta.
+        if (payload.length === 0) {
+          setActiveEmergencies((previous) => previous.filter((item) => item.id !== alertId))
 
-    // No se elimina del historial porque la emergencia
-    // debe conservarse como registro.
-    return
-  }
+          // No se elimina del historial porque la emergencia
+          // debe conservarse como registro.
+          return
+        }
 
-  // Recibir una emergencia activa o su actualización.
-  try {
-    const alert = parseEmergency(
-      receivedTopic,
-      payload
-    )
+        // Recibir una emergencia activa o su actualización.
+        try {
+          const alert = parseEmergency(receivedTopic, payload)
 
-    setActiveEmergencies((previous) => {
-      const exists = previous.some(
-        (item) => item.id === alert.id
-      )
+          setActiveEmergencies((previous) => {
+            const exists = previous.some((item) => item.id === alert.id)
 
-      if (exists) {
-        // Actualizar los datos de una emergencia existente.
-        return previous.map((item) =>
-          item.id === alert.id
-            ? { ...item, ...alert }
-            : item
-        )
+            if (exists) {
+              // Actualizar los datos de una emergencia existente.
+              return previous.map((item) => (item.id === alert.id ? { ...item, ...alert } : item))
+            }
+
+            // Registrar una nueva emergencia activa.
+            return [alert, ...previous].slice(0, 100)
+          })
+
+          // Conservar el registro en el historial de la sesión.
+          setEmergencyAlerts((previous) => {
+            const exists = previous.some((item) => item.id === alert.id)
+
+            if (exists) {
+              return previous.map((item) => (item.id === alert.id ? { ...item, ...alert } : item))
+            }
+
+            return [alert, ...previous].slice(0, 100)
+          })
+        } catch (receiveError) {
+          console.warn('HU12: emergencia activa descartada:', receiveError.message)
+        }
+
+        return
       }
-
-      // Registrar una nueva emergencia activa.
-      return [alert, ...previous].slice(0, 100)
-    })
-
-    // Conservar el registro en el historial de la sesión.
-    setEmergencyAlerts((previous) => {
-      const exists = previous.some(
-        (item) => item.id === alert.id
-      )
-
-      if (exists) {
-        return previous.map((item) =>
-          item.id === alert.id
-            ? { ...item, ...alert }
-            : item
-        )
-      }
-
-      return [alert, ...previous].slice(0, 100)
-    })
-  } catch (receiveError) {
-    console.warn(
-      'HU12: emergencia activa descartada:',
-      receiveError.message
-    )
-  }
-
-  return
-}
 
       // MENSAJES NUEVOS DEL CANAL GENERAL
 
@@ -526,15 +449,10 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       }
 
       try {
-        const alert = parseEmergency(
-          receivedTopic,
-          payload
-        )
+        const alert = parseEmergency(receivedTopic, payload)
 
         setEmergencyAlerts((previous) => {
-          const exists = previous.some(
-            (item) => item.id === alert.id
-          )
+          const exists = previous.some((item) => item.id === alert.id)
 
           if (exists) {
             return previous
@@ -543,10 +461,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
           return [alert, ...previous].slice(0, 100)
         })
       } catch (receiveError) {
-        console.warn(
-          'HU12: alerta descartada:',
-          receiveError.message
-        )
+        console.warn('HU12: alerta descartada:', receiveError.message)
       }
     }
 
@@ -554,51 +469,45 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
 
     // SUSCRIBIR A AMBOS CANALES
 
-    subscriptionQueueRef.current =
-      subscriptionQueueRef.current
-        .catch(() => {})
-        .then(
-          () =>
-            new Promise((resolve) => {
-              if (!active || !client.connected) {
-                resolve()
-                return
-              }
+    subscriptionQueueRef.current = subscriptionQueueRef.current
+      .catch(() => {})
+      .then(
+        () =>
+          new Promise((resolve) => {
+            if (!active || !client.connected) {
+              resolve()
+              return
+            }
 
-              client.subscribe(
-                [emergencyTopic, activeFilter],
-                { qos: 1 },
-                (subscribeError, granted) => {
-                  if (active) {
-                    const failed =
-                      subscribeError ||
-                      granted?.length !== 2 ||
-                      granted.some((item) => item.qos !== 1)
+            client.subscribe(
+              [emergencyTopic, activeFilter],
+              { qos: 1 },
+              (subscribeError, granted) => {
+                if (active) {
+                  const failed =
+                    subscribeError ||
+                    granted?.length !== 2 ||
+                    granted.some((item) => item.qos !== 1)
 
-                    if (failed) {
-                      setEmergencySubscriptionStatus('failed')
+                  if (failed) {
+                    setEmergencySubscriptionStatus('failed')
 
-                      setError(
-                        'No se pudo activar el canal de emergencias.'
-                      )
-                    } else {
-                      setEmergencySubscriptionStatus('active')
-                    }
+                    setError('No se pudo activar el canal de emergencias.')
+                  } else {
+                    setEmergencySubscriptionStatus('active')
                   }
-
-                  resolve()
                 }
-              )
-            })
-        )
+
+                resolve()
+              }
+            )
+          })
+      )
 
     return () => {
       active = false
 
-      client.removeListener(
-        'message',
-        handleEmergencyMessage
-      )
+      client.removeListener('message', handleEmergencyMessage)
     }
   }, [status])
 
@@ -610,19 +519,11 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     }
 
     try {
-      sessionStorage.setItem(
-        `mqtt_hu12_alerts_${userId}`,
-        JSON.stringify(emergencyAlerts)
-      )
+      sessionStorage.setItem(`mqtt_hu12_alerts_${userId}`, JSON.stringify(emergencyAlerts))
     } catch (storageError) {
-      console.warn(
-        'HU12: no se pudo guardar el historial:',
-        storageError.message
-      )
+      console.warn('HU12: no se pudo guardar el historial:', storageError.message)
     }
   }, [userId, emergencyAlerts])
-
-  // ENVÍO DE MENSAJES NORMALES
 
   const sendMessage = useCallback(
     async (channelId, content) => {
@@ -634,6 +535,10 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
 
       if (!userId || !userName || !userRole) {
         throw new Error('El usuario no está identificado.')
+      }
+
+      if (!canAccessChannel(userRole, channelId)) {
+        throw new Error('No tienes permiso para publicar en este canal.')
       }
 
       return publishMessage({
@@ -666,8 +571,7 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
     activeEmergencies,
     emergencySubscriptionStatus,
     subscribedChannelId:
-      status === 'connected' &&
-      subscribedChannelId === selectedChannelId
+      status === 'connected' && subscribedChannelId === selectedChannelId
         ? subscribedChannelId
         : null,
     clientRef

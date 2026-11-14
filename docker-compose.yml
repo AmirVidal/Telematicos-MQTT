@@ -43,8 +43,8 @@ services:
       API_PORT: 3001
       MONGODB_URI: mongodb://mongo:27017/telematicos
       MQTT_URL: mqtt://mosquitto:1883
-      MQTT_USERNAME: administracion
-      MQTT_PASSWORD: admin123
+      MQTT_USERNAME: db_writer
+      MQTT_PASSWORD: ${MQTT_WRITER_PASSWORD:?Configura MQTT_WRITER_PASSWORD en .env}
       MQTT_CLIENT_ID: telematicos-db-writer
       MQTT_TOPIC_FILTER: "edificio/+/#"
       BUILDING_ID: principal

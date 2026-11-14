@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import UserIdentification from './components/UserIdentification'
 import { useIncidentReport } from './hooks/useIncidentReport'
 import { useSupportRequest } from './hooks/useSupportRequest'
-import { getChannel } from './config/channelOptions'
+import { canAccessChannel, getChannel } from './config/channelOptions'
 import { getUserSession, clearUserSession } from './services/userSession'
 import {
   getSelectedChannelId,
@@ -27,11 +27,12 @@ import PersonnelView from './components/personnel/PersonnelView'
 
 function MqttDashboard({ user, onLogout }) {
   const [seccionActiva, setSeccionActiva] = useState('mensajeria')
-  const [selectedChannelId, setSelectedChannelId] = useState(() => getSelectedChannelId(user.id))
-  const confirmationStorageKey =
-    `mqtt_hu12_confirmed_${user.role}_${encodeURIComponent(
-      user.name.trim().toLowerCase()
-    )}`
+  const [selectedChannelId, setSelectedChannelId] = useState(() =>
+    getSelectedChannelId(user.id, user.role)
+  )
+  const confirmationStorageKey = `mqtt_hu12_confirmed_${user.role}_${encodeURIComponent(
+    user.name.trim().toLowerCase()
+  )}`
 
   const [dismissedEmergencyIds, setDismissedEmergencyIds] = useState(() => {
     try {
@@ -41,9 +42,7 @@ function MqttDashboard({ user, onLogout }) {
 
       const parsed = JSON.parse(stored || '[]')
 
-      return Array.isArray(parsed)
-        ? parsed.filter((id) => typeof id === 'string')
-        : []
+      return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : []
     } catch {
       return []
     }
@@ -78,51 +77,38 @@ function MqttDashboard({ user, onLogout }) {
   }
   const { sendSupportRequest } = useSupportRequest(clientRef, user)
   const { sendIncident } = useIncidentReport(clientRef, user)
-  const {
-        sendEmergency,
-        markEmergencyResolved,
-      } = useEmergencyAlert(clientRef, user)
+  const { sendEmergency, markEmergencyResolved } = useEmergencyAlert(clientRef, user)
   const selectedChannel = getChannel(selectedChannelId)
 
   function handleSelectChannel(channelId) {
-    saveSelectedChannelId(user.id, channelId)
+    if (!canAccessChannel(user.role, channelId)) {
+      return
+    }
+
+    saveSelectedChannelId(user.id, user.role, channelId)
     setSelectedChannelId(channelId)
   }
   useEffect(() => {
     try {
-      localStorage.setItem(
-        confirmationStorageKey,
-        JSON.stringify(dismissedEmergencyIds)
-      )
+      localStorage.setItem(confirmationStorageKey, JSON.stringify(dismissedEmergencyIds))
     } catch (error) {
-      console.warn(
-        'No se pudieron guardar las confirmaciones:',
-        error
-      )
+      console.warn('No se pudieron guardar las confirmaciones:', error)
     }
   }, [confirmationStorageKey, dismissedEmergencyIds])
   const pendingEmergency =
     emergencyAlerts.find((alert) => {
-      const isActive = activeEmergencies.some(
-        (active) => active.id === alert.id
-      )
+      const isActive = activeEmergencies.some((active) => active.id === alert.id)
 
-      const confirmedLocally =
-        dismissedEmergencyIds.includes(alert.id)
+      const confirmedLocally = dismissedEmergencyIds.includes(alert.id)
 
       const confirmedByMqtt = acknowledgments.some(
         (item) =>
           item.emergencyId === alert.id &&
           item.userRole === user.role &&
-          item.userName?.trim().toLowerCase() ===
-            user.name.trim().toLowerCase()
+          item.userName?.trim().toLowerCase() === user.name.trim().toLowerCase()
       )
 
-      return (
-        isActive &&
-        !confirmedLocally &&
-        !confirmedByMqtt
-      )
+      return isActive && !confirmedLocally && !confirmedByMqtt
     }) ?? null
   function handleDismissEmergency(alertId) {
     setDismissedEmergencyIds((previous) => {
@@ -176,9 +162,7 @@ function MqttDashboard({ user, onLogout }) {
                 onSend={sendEmergency}
               />
             )}
-            {seccionActiva === 'historial-emergencias' && (
-              <EmergencyHistory />
-             )}
+            {seccionActiva === 'historial-emergencias' && <EmergencyHistory />}
             {seccionActiva === 'mensajeria' && (
               <MessagingView
                 selectedChannelId={selectedChannelId}
@@ -186,6 +170,7 @@ function MqttDashboard({ user, onLogout }) {
                 selectedChannel={selectedChannel}
                 receivedMessages={receivedMessages}
                 currentUserId={user.id}
+                userRole={user.role}
                 connected={status === 'connected'}
                 onSend={sendMessage}
               />
@@ -217,7 +202,6 @@ function MqttDashboard({ user, onLogout }) {
               />
             )}
             <footer className="pie">No hay historial</footer>
-            
           </div>
         </div>
       </div>
