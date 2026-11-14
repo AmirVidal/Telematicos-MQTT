@@ -1,6 +1,13 @@
-import { CHANNELS, getChannel, getChannelTopic } from '../config/channelOptions'
+import { getAccessibleChannels, getChannel, getChannelTopic } from '../config/channelOptions'
 
-export default function ChannelSelector({ selectedChannelId, onSelectChannel, compact = false }) {
+export default function ChannelSelector({
+  selectedChannelId,
+  onSelectChannel,
+  userRole,
+  compact = false
+}) {
+  const accessibleChannels = getAccessibleChannels(userRole)
+
   const channel = getChannel(selectedChannelId)
   const topic = getChannelTopic(selectedChannelId)
 
@@ -29,7 +36,7 @@ export default function ChannelSelector({ selectedChannelId, onSelectChannel, co
       >
         <option value="">Selecciona un canal de comunicación</option>
 
-        {CHANNELS.map((option) => (
+        {accessibleChannels.map((option) => (
           <option key={option.id} value={option.id}>
             {option.name}
           </option>

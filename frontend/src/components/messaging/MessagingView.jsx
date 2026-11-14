@@ -10,6 +10,7 @@ export default function MessagingView({
   selectedChannel,
   receivedMessages,
   currentUserId,
+  userRole,
   connected,
   onSend
 }) {
@@ -55,6 +56,7 @@ export default function MessagingView({
           <ChannelSelector
             selectedChannelId={selectedChannelId}
             onSelectChannel={onSelectChannel}
+            userRole={userRole}
             compact
           />
         </aside>
