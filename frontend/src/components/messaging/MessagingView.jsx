@@ -10,6 +10,7 @@ export default function MessagingView({
   selectedChannel,
   receivedMessages,
   currentUserId,
+  currentUserName,
   userRole,
   connected,
   onSend
@@ -77,6 +78,8 @@ export default function MessagingView({
             <ReceivedMessages
               messages={channelMessages}
               currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              currentUserRole={userRole}
               channelName={selectedChannel?.name ?? null}
               compact
             />

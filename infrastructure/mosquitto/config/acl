@@ -1,6 +1,8 @@
 # ACL - Telematicos-MQTT
 # Acceso por area y cuenta de persistencia
 
+pattern write edificio/+/alertas/emergencias/acuses/+/%c
+
 # SEGURIDAD
 user seguridad
 topic readwrite edificio/+/mensajeria/general
@@ -11,7 +13,6 @@ topic readwrite edificio/+/incidentes/#
 topic readwrite edificio/+/telemetria/#
 topic read $SYS/#
 topic read edificio/+/alertas/#
-topic write edificio/+/alertas/emergencias/acuses/+/%c
 topic write edificio/+/alertas/incendio
 topic write edificio/+/alertas/intrusion
 topic write edificio/+/alertas/falla_electrica
@@ -32,7 +33,6 @@ topic readwrite edificio/+/incidentes/#
 topic readwrite edificio/+/telemetria/#
 topic read $SYS/#
 topic read edificio/+/alertas/#
-topic write edificio/+/alertas/emergencias/acuses/+/%c
 topic write edificio/+/alertas/incendio
 topic write edificio/+/alertas/intrusion
 topic write edificio/+/alertas/falla_electrica
@@ -51,7 +51,6 @@ topic readwrite edificio/+/incidentes/#
 topic readwrite edificio/+/telemetria/#
 topic read $SYS/#
 topic read edificio/+/alertas/#
-topic write edificio/+/alertas/emergencias/acuses/+/%c
 topic write edificio/+/alertas/incendio
 topic write edificio/+/alertas/intrusion
 topic write edificio/+/alertas/falla_electrica
@@ -72,7 +71,6 @@ topic readwrite edificio/+/incidentes/#
 topic readwrite edificio/+/telemetria/#
 topic read $SYS/#
 topic read edificio/+/alertas/#
-topic write edificio/+/alertas/emergencias/acuses/+/%c
 topic write edificio/+/alertas/incendio
 topic write edificio/+/alertas/intrusion
 topic write edificio/+/alertas/falla_electrica
@@ -91,7 +89,6 @@ topic readwrite edificio/+/incidentes/#
 topic readwrite edificio/+/telemetria/#
 topic read $SYS/#
 topic read edificio/+/alertas/#
-topic write edificio/+/alertas/emergencias/acuses/+/%c
 topic write edificio/+/alertas/incendio
 topic write edificio/+/alertas/intrusion
 topic write edificio/+/alertas/falla_electrica
@@ -110,7 +107,6 @@ topic readwrite edificio/+/incidentes/#
 topic readwrite edificio/+/telemetria/#
 topic read $SYS/#
 topic read edificio/+/alertas/#
-topic write edificio/+/alertas/emergencias/acuses/+/%c
 topic write edificio/+/alertas/incendio
 topic write edificio/+/alertas/intrusion
 topic write edificio/+/alertas/falla_electrica

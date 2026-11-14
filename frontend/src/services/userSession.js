@@ -1,102 +1,165 @@
-﻿const SESSION_KEY = 'mqtt_user_session'
+﻿const SESSION_KEY = "mqtt_user_session";
 
 export const USER_ROLES = Object.freeze({
-  SEGURIDAD: 'seguridad',
-  MANTENIMIENTO: 'mantenimiento',
-  RECEPCION: 'recepcion',
-  LIMPIEZA: 'limpieza',
-  ADMINISTRACION: 'administracion'
-})
+  SEGURIDAD: "seguridad",
+  MANTENIMIENTO: "mantenimiento",
+  RECEPCION: "recepcion",
+  LIMPIEZA: "limpieza",
+  ADMINISTRACION: "administracion",
+});
 
-const VALID_ROLES = Object.values(USER_ROLES)
+const VALID_ROLES = Object.values(USER_ROLES);
 
 export function validateUser(name, role) {
-  if (typeof name !== 'string' || !name.trim()) {
-    throw new Error('El nombre es obligatorio.')
+  if (typeof name !== "string" || !name.trim()) {
+    throw new Error("El nombre es obligatorio.");
   }
 
-  const normalizedName = name.trim().replace(/\s+/g, ' ')
+  const normalizedName = name.trim().replace(/\s+/g, " ");
 
   if (normalizedName.length < 3 || normalizedName.length > 50) {
-    throw new Error('El nombre debe tener entre 3 y 50 caracteres.')
+    throw new Error("El nombre debe tener entre 3 y 50 caracteres.");
   }
 
   if (!/^[\p{L}\p{M}]+(?:[ .'-][\p{L}\p{M}]+)*$/u.test(normalizedName)) {
-    throw new Error('El nombre contiene caracteres no permitidos.')
+    throw new Error("El nombre contiene caracteres no permitidos.");
   }
 
   if (!VALID_ROLES.includes(role)) {
-    throw new Error('El tipo de personal seleccionado no es válido.')
+    throw new Error("El tipo de personal seleccionado no es válido.");
   }
 
-  return normalizedName
+  return normalizedName;
 }
 
 export function createUserSession(name, role) {
-  const normalizedName = validateUser(name, role)
+  const normalizedName = validateUser(name, role);
+  const account = LOGIN_USERS.find(
+    (candidate) => candidate.name === normalizedName && candidate.role === role,
+  );
 
-  const user = {
-    id: crypto.randomUUID(),
-    name: normalizedName,
-    role
+  if (!account) {
+    throw new Error("No existe una cuenta asociada a este usuario.");
   }
 
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
+  const user = {
+    id: account.id,
+    name: account.name,
+    role: account.role,
+    username: account.username,
+    password: account.password,
+  };
 
-  return user
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+
+  return user;
 }
 
 export function getUserSession() {
-  const stored = sessionStorage.getItem(SESSION_KEY)
+  const stored = sessionStorage.getItem(SESSION_KEY);
 
-  if (!stored) return null
+  if (!stored) return null;
 
   try {
-    const user = JSON.parse(stored)
+    const user = JSON.parse(stored);
+    const account = LOGIN_USERS.find(
+      (candidate) => candidate.username === user.username,
+    );
 
-    if (typeof user.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(user.id)) {
-      throw new Error('Identificador inválido.')
+    if (account) {
+      const restoredUser = {
+        ...user,
+        id: account.id,
+        name: account.name,
+        role: account.role,
+      };
+
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(restoredUser));
+      return restoredUser;
     }
 
-    validateUser(user.name, user.role)
+    if (typeof user.id !== "string" || !/^[0-9a-f-]{36}$/i.test(user.id)) {
+      throw new Error("Identificador inválido.");
+    }
 
-    return user
+    validateUser(user.name, user.role);
+
+    return user;
   } catch {
-    sessionStorage.removeItem(SESSION_KEY)
-    return null
+    sessionStorage.removeItem(SESSION_KEY);
+    return null;
   }
 }
 
 export function clearUserSession() {
-  sessionStorage.removeItem(SESSION_KEY)
+  sessionStorage.removeItem(SESSION_KEY);
 }
 
 export const LOGIN_USERS = Object.freeze([
-  { username: 'seguridad', password: 'seg123', name: 'Carlos Ramirez', role: USER_ROLES.SEGURIDAD },
-  { username: 'mantenimiento', password: 'pass123', name: 'Juan Perez', role: USER_ROLES.MANTENIMIENTO },
-  { username: 'mantenimiento2', password: 'pass123', name: 'Ana Gomez', role: USER_ROLES.MANTENIMIENTO },
-  { username: 'recepcion', password: 'recep123', name: 'Laura Fernandez', role: USER_ROLES.RECEPCION },
-  { username: 'limpieza', password: 'limp123', name: 'Pedro Sanchez', role: USER_ROLES.LIMPIEZA },
-  { username: 'administracion', password: 'admin123', name: 'Maria Torres', role: USER_ROLES.ADMINISTRACION }
-])
+  {
+    id: "ba7d8d48-5050-454f-8434-d386c90297f9",
+    username: "seguridad",
+    password: "seg123",
+    name: "Carlos Ramirez",
+    role: USER_ROLES.SEGURIDAD,
+  },
+  {
+    id: "fefececa-cac5-4b5c-b669-fa65db2951e1",
+    username: "mantenimiento",
+    password: "pass123",
+    name: "Juan Perez",
+    role: USER_ROLES.MANTENIMIENTO,
+  },
+  {
+    id: "f42bae18-c553-409d-8d01-71a4599f0fc9",
+    username: "mantenimiento2",
+    password: "pass123",
+    name: "Ana Gomez",
+    role: USER_ROLES.MANTENIMIENTO,
+  },
+  {
+    id: "df831c73-5baf-40f2-8f52-9d028eaa8e43",
+    username: "recepcion",
+    password: "recep123",
+    name: "Laura Fernandez",
+    role: USER_ROLES.RECEPCION,
+  },
+  {
+    id: "9a99e4e8-7a17-46a6-87f4-63467c8d0eea",
+    username: "limpieza",
+    password: "limp123",
+    name: "Pedro Sanchez",
+    role: USER_ROLES.LIMPIEZA,
+  },
+  {
+    id: "7fe426b7-0041-4551-811c-702f63ac9404",
+    username: "administracion",
+    password: "admin123",
+    name: "Maria Torres",
+    role: USER_ROLES.ADMINISTRACION,
+  },
+]);
 
 export function authenticateUser(username, password) {
-  const normalizedUsername = typeof username === 'string' ? username.trim().toLowerCase() : ''
-  const account = LOGIN_USERS.find((candidate) => candidate.username === normalizedUsername)
+  const normalizedUsername =
+    typeof username === "string" ? username.trim().toLowerCase() : "";
+  const account = LOGIN_USERS.find(
+    (candidate) => candidate.username === normalizedUsername,
+  );
 
   if (!account || account.password !== password) {
-    throw new Error('Usuario o contrasena incorrectos.')
+    throw new Error("Usuario o contrasena incorrectos.");
   }
 
   const user = {
-    id: crypto.randomUUID(),
+    id: account.id,
     name: account.name,
     role: account.role,
     username: account.username,
-    password: account.password
-  }
+    password: account.password,
+  };
 
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user))
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
 
-  return user
+  return user;
 }

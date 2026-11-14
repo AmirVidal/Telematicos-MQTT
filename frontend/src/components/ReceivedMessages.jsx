@@ -19,6 +19,8 @@ function formatTimestamp(timestamp) {
 export default function ReceivedMessages({
   messages = [],
   currentUserId = null,
+  currentUserName = null,
+  currentUserRole = null,
   channelName = null,
   compact = false
 }) {
@@ -66,7 +68,13 @@ export default function ReceivedMessages({
             const authorName = message.author?.name || message.senderName || 'Desconocido'
             const authorRole = message.author?.role || message.senderRole || ''
             const authorId = message.author?.id || message.senderId || null
-            const isOwnMessage = currentUserId && authorId === currentUserId
+            const isSameAccountByName =
+              currentUserName &&
+              currentUserRole &&
+              authorName.trim().toLocaleLowerCase() === currentUserName.trim().toLocaleLowerCase() &&
+              authorRole === currentUserRole
+            const isOwnMessage =
+              (currentUserId && authorId === currentUserId) || isSameAccountByName
 
             return (
               <li

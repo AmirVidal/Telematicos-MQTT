@@ -170,6 +170,7 @@ function MqttDashboard({ user, onLogout }) {
                 selectedChannel={selectedChannel}
                 receivedMessages={receivedMessages}
                 currentUserId={user.id}
+                currentUserName={user.name}
                 userRole={user.role}
                 connected={status === 'connected'}
                 onSend={sendMessage}
