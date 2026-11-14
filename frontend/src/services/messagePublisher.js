@@ -63,7 +63,7 @@ export function publishMessage({ client, user, channelId, content }) {
         JSON.stringify(message),
         {
           qos: 1,
-          retain: true
+          retain: false
         },
         (error) => {
           if (error) {

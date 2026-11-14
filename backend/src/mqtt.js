@@ -1,6 +1,7 @@
 import mqtt from 'mqtt'
 import { config } from './config.js'
 import { logger } from './logger.js'
+import { handleHistoryRequest } from './messageHistory.js'
 
 export function createMqttConsumer({ onMessage }) {
   const client = mqtt.connect(config.mqttUrl, {
@@ -43,9 +44,23 @@ export function createMqttConsumer({ onMessage }) {
 
   client.on('message', (topic, payload) => {
     queue = queue
-      .then(() => onMessage(topic, payload))
+      .then(async () => {
+        if (/^edificio\/[^/]+\/historial\/solicitudes\/[^/]+$/.test(topic)) {
+          await handleHistoryRequest(client, topic, payload)
+          return
+        }
+
+        if (/^edificio\/[^/]+\/historial\//.test(topic)) {
+          return
+        }
+
+        await onMessage(topic, payload)
+      })
       .catch((error) => {
-        logger.error('mqtt message handler failed', { topic, error: error.message })
+        logger.error('mqtt message handler failed', {
+          topic,
+          error: error.message
+        })
       })
   })
 

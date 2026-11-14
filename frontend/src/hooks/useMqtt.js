@@ -3,11 +3,14 @@ import { createClientId, createMqttConnection, MQTT_URL } from '../services/mqtt
 import { createPresenceClient, createPresenceWill } from '../services/presenceClient'
 import { publishMessage } from '../services/messagePublisher'
 import { parseReceivedMessage } from '../services/messageReceiver'
-import { canAccessChannel, getChannelTopic } from '../config/channelOptions'
+import {
+  BUILDING_ID as CHAT_BUILDING_ID,
+  canAccessChannel,
+  getChannelTopic
+} from '../config/channelOptions'
 import { topics } from '../config/mqttTopics'
 import { USER_ROLES } from '../services/userSession'
 import { parseIncident } from '../services/incidentReceiver'
-import { BUILDING_ID as EMERGENCY_BUILDING_ID } from '../config/channelOptions'
 import { parseEmergency } from '../services/emergencyReceiver'
 
 const BUILDING_ID = import.meta.env.VITE_BUILDING_ID ?? 'edificio-1'
@@ -209,6 +212,110 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
 
   useEffect(() => {
     const client = clientRef.current
+    const mqttUsername = user?.username
+
+    if (!client || status !== 'connected' || !selectedChannelId || !mqttUsername) {
+      return
+    }
+
+    if (!canAccessChannel(userRole, selectedChannelId)) {
+      return
+    }
+
+    const requestId = crypto.randomUUID()
+    const requestTopic = `edificio/${CHAT_BUILDING_ID}/historial/solicitudes/${mqttUsername}`
+
+    const responseTopic = `edificio/${CHAT_BUILDING_ID}/historial/respuestas/${mqttUsername}/${clientId}`
+
+    let active = true
+
+    function handleHistoryResponse(topic, payload) {
+      if (!active || topic !== responseTopic) return
+
+      try {
+        const response = JSON.parse(new TextDecoder().decode(payload))
+
+        if (
+          response.requestId !== requestId ||
+          response.channelId !== selectedChannelId ||
+          !Array.isArray(response.messages)
+        ) {
+          return
+        }
+
+        setReceivedMessages((previous) => {
+          const merged = new Map()
+          for (const message of response.messages) {
+            if (typeof message.id === 'string' && message.channelId === selectedChannelId) {
+              merged.set(message.id, message)
+            }
+          }
+
+          for (const message of previous) {
+            if (typeof message.id === 'string' && canAccessChannel(userRole, message.channelId)) {
+              merged.set(message.id, message)
+            }
+          }
+
+          return [...merged.values()]
+            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+            .slice(-200)
+        })
+      } catch (error) {
+        console.warn('No se pudo procesar el historial MQTT:', error.message)
+      }
+    }
+
+    client.on('message', handleHistoryResponse)
+
+    client.subscribe(responseTopic, { qos: 1 }, (subscribeError, granted) => {
+      if (!active) return
+
+      const denied = subscribeError || !granted?.length || granted.some((item) => item.qos >= 0x80)
+
+      if (denied) {
+        setError('No se pudo consultar el historial MQTT.')
+        return
+      }
+
+      const request = {
+        requestId,
+        clientId,
+        channelId: selectedChannelId,
+        limit: 50
+      }
+
+      client.publish(
+        requestTopic,
+        JSON.stringify(request),
+        { qos: 1, retain: false },
+        (publishError) => {
+          if (active && publishError) {
+            setError('No se pudo solicitar el historial.')
+          }
+        }
+      )
+    })
+
+    return () => {
+      active = false
+      client.removeListener('message', handleHistoryResponse)
+
+      if (client.connected) {
+        client.unsubscribe(responseTopic, (unsubscribeError) => {
+          if (unsubscribeError) {
+            console.warn(
+              'No se pudo cancelar la suscripción al historial:',
+              unsubscribeError.message
+            )
+          }
+        })
+      }
+    }
+  }, [status, selectedChannelId, clientId, userRole, user?.username])
+
+  useEffect(() => {
+    const client = clientRef.current
 
     if (!client || status !== 'connected') {
       return
@@ -374,11 +481,11 @@ export function useMqtt(user = null, url = MQTT_URL, selectedChannelId = null) {
       return
     }
 
-    const emergencyTopic = topics.alertas.emergencias(EMERGENCY_BUILDING_ID)
+    const emergencyTopic = topics.alertas.emergencias(CHAT_BUILDING_ID)
 
-    const activePrefix = `${topics.alertas.emergenciasActivas(EMERGENCY_BUILDING_ID)}/`
+    const activePrefix = `${topics.alertas.emergenciasActivas(CHAT_BUILDING_ID)}/`
 
-    const activeFilter = topics.alertas.emergenciasActivasSuscripcion(EMERGENCY_BUILDING_ID)
+    const activeFilter = topics.alertas.emergenciasActivasSuscripcion(CHAT_BUILDING_ID)
 
     let active = true
 
