@@ -1,0 +1,130 @@
+# ACL - Telematicos-MQTT
+# Acceso por area y cuenta de persistencia
+
+pattern write edificio/+/alertas/emergencias/acuses/+/%c
+
+# SEGURIDAD
+user seguridad
+topic readwrite edificio/+/mensajeria/general
+topic readwrite edificio/+/mensajeria/seguridad
+topic readwrite edificio/+/personal/#
+topic readwrite edificio/+/comandos/#
+topic readwrite edificio/+/incidentes/#
+topic readwrite edificio/+/telemetria/#
+topic read $SYS/#
+topic read edificio/+/alertas/#
+topic write edificio/+/alertas/incendio
+topic write edificio/+/alertas/intrusion
+topic write edificio/+/alertas/falla_electrica
+topic write edificio/+/alertas/fuga_agua
+topic write edificio/+/alertas/evacuacion
+topic write edificio/+/alertas/general
+topic write edificio/+/alertas/emergencias
+topic write edificio/+/alertas/emergencias/activas/+
+topic write edificio/+/historial/solicitudes/seguridad
+
+# MANTENIMIENTO
+user mantenimiento
+topic readwrite edificio/+/mensajeria/general
+topic readwrite edificio/+/mensajeria/mantenimiento
+topic readwrite edificio/+/personal/#
+topic readwrite edificio/+/comandos/#
+topic readwrite edificio/+/incidentes/#
+topic readwrite edificio/+/telemetria/#
+topic read $SYS/#
+topic read edificio/+/alertas/#
+topic write edificio/+/alertas/incendio
+topic write edificio/+/alertas/intrusion
+topic write edificio/+/alertas/falla_electrica
+topic write edificio/+/alertas/fuga_agua
+topic write edificio/+/alertas/evacuacion
+topic write edificio/+/alertas/general
+topic write edificio/+/historial/solicitudes/mantenimiento
+
+# MANTENIMIENTO 2
+user mantenimiento2
+topic readwrite edificio/+/mensajeria/general
+topic readwrite edificio/+/mensajeria/mantenimiento
+topic readwrite edificio/+/personal/#
+topic readwrite edificio/+/comandos/#
+topic readwrite edificio/+/incidentes/#
+topic readwrite edificio/+/telemetria/#
+topic read $SYS/#
+topic read edificio/+/alertas/#
+topic write edificio/+/alertas/incendio
+topic write edificio/+/alertas/intrusion
+topic write edificio/+/alertas/falla_electrica
+topic write edificio/+/alertas/fuga_agua
+topic write edificio/+/alertas/evacuacion
+topic write edificio/+/alertas/general
+topic write edificio/+/alertas/emergencias
+topic write edificio/+/alertas/emergencias/activas/+
+topic write edificio/+/historial/solicitudes/mantenimiento2
+
+# RECEPCION
+user recepcion
+topic readwrite edificio/+/mensajeria/general
+topic readwrite edificio/+/mensajeria/recepcion
+topic readwrite edificio/+/personal/#
+topic readwrite edificio/+/comandos/#
+topic readwrite edificio/+/incidentes/#
+topic readwrite edificio/+/telemetria/#
+topic read $SYS/#
+topic read edificio/+/alertas/#
+topic write edificio/+/alertas/incendio
+topic write edificio/+/alertas/intrusion
+topic write edificio/+/alertas/falla_electrica
+topic write edificio/+/alertas/fuga_agua
+topic write edificio/+/alertas/evacuacion
+topic write edificio/+/alertas/general
+topic write edificio/+/historial/solicitudes/recepcion
+
+# LIMPIEZA
+user limpieza
+topic readwrite edificio/+/mensajeria/general
+topic readwrite edificio/+/mensajeria/limpieza
+topic readwrite edificio/+/personal/#
+topic readwrite edificio/+/comandos/#
+topic readwrite edificio/+/incidentes/#
+topic readwrite edificio/+/telemetria/#
+topic read $SYS/#
+topic read edificio/+/alertas/#
+topic write edificio/+/alertas/incendio
+topic write edificio/+/alertas/intrusion
+topic write edificio/+/alertas/falla_electrica
+topic write edificio/+/alertas/fuga_agua
+topic write edificio/+/alertas/evacuacion
+topic write edificio/+/alertas/general
+topic write edificio/+/historial/solicitudes/limpieza
+
+# ADMINISTRACION
+user administracion
+topic readwrite edificio/+/mensajeria/general
+topic readwrite edificio/+/mensajeria/administracion
+topic readwrite edificio/+/personal/#
+topic readwrite edificio/+/comandos/#
+topic readwrite edificio/+/incidentes/#
+topic readwrite edificio/+/telemetria/#
+topic read $SYS/#
+topic read edificio/+/alertas/#
+topic write edificio/+/alertas/incendio
+topic write edificio/+/alertas/intrusion
+topic write edificio/+/alertas/falla_electrica
+topic write edificio/+/alertas/fuga_agua
+topic write edificio/+/alertas/evacuacion
+topic write edificio/+/alertas/general
+topic write edificio/+/alertas/emergencias
+topic write edificio/+/alertas/emergencias/activas/+
+topic write edificio/+/historial/solicitudes/administracion
+
+# BACKEND - PERSISTENCIA EN MONGODB
+
+user db_writer
+topic read edificio/+/#
+topic write edificio/+/historial/respuestas/#
+
+# HISTORIAL MQTT - RESPUESTAS PRIVADAS
+# %u = usuario MQTT autenticado
+# %c = identificador del cliente conectado
+
+pattern read edificio/+/historial/respuestas/%u/%c

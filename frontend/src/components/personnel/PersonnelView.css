@@ -1,0 +1,14 @@
+.personnel-view {
+  width: 100%;
+  min-width: 0;
+}
+
+.personnel-view-content {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.personnel-view-content .tarjeta {
+  margin: 0;
+}

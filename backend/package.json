@@ -1,0 +1,20 @@
+{
+  "name": "telematicos-mqtt-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Persistencia de eventos MQTT en MongoDB",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "seed": "node scripts/seed.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongoose": "^8.19.1",
+    "mqtt": "^5.16.1"
+  }
+}

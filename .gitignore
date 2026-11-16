@@ -147,3 +147,13 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+# MQTT - Eclipse Mosquitto
+infrastructure/mosquitto/data/*
+infrastructure/mosquitto/log/*
+
+# Mantener las carpetas vacías en Git
+!infrastructure/mosquitto/data/.gitkeep
+!infrastructure/mosquitto/log/.gitkeep
+
+# Archivos de respaldo de Mosquitto
+*.db
